@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id                Int           @id @default(autoincrement())
+  email             String        @unique
+  password          String
+  role              user_role     @default(CUSTOMER)
+  firstName         String?
+  lastName          String?
+  phone             String?
+  address           String?
+  licenseNumber     String?       @unique
+  licenseExpiryDate DateTime?
+  idCardUrl         String?
+  licenseUrl        String?
+  isBlacklisted     Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  reservation       reservation[]
+  passwordreset     passwordreset[]
+}
+
+model passwordreset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model checkin {
+  id            Int         @id @default(autoincrement())
+  reservationId Int         @unique
+  mileageStart  Int
+  photos        String
+  signatureUrl  String?
+  reservation   reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+model checkout {
+  id            Int         @id @default(autoincrement())
+  reservationId Int         @unique
+  mileageEnd    Int
+  damageReport  String?
+  extraCharges  Float       @default(0)
+  signatureUrl  String?
+  reservation   reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+model maintenance {
+  id          Int              @id @default(autoincrement())
+  vehicleId   Int
+  type        maintenance_type
+  dueDate     DateTime
+  dueMileage  Int?
+  isCompleted Boolean          @default(false)
+  vehicle     vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+}
+
+model reservation {
+  id             Int                @id @default(autoincrement())
+  vehicleId      Int
+  userId         Int
+  startDate      DateTime
+  endDate        DateTime
+  totalPrice     Float
+  depositPaid    Float
+  paymentStatus  payment_status     @default(UNPAID)
+  status         reservation_status @default(PENDING)
+  contractNumber String             @unique
+  contractPdfUrl String?
+  createdAt      DateTime           @default(now())
+  checkin        checkin?
+  checkout       checkout?
+  user           user               @relation(fields: [userId], references: [id])
+  vehicle        vehicle            @relation(fields: [vehicleId], references: [id])
+
+  @@index([userId])
+  @@index([vehicleId])
+}
+
+model vehicle {
+  id           Int            @id @default(autoincrement())
+  brand        String
+  model        String
+  year         Int?
+  licensePlate String         @unique
+  category     String
+  color        String?
+  seats        Int?
+  transmission String?
+  fuelType     String?
+  description  String?        @db.Text
+  features     String?        @db.Text
+  dailyPrice   Float
+  deposit      Float
+  mileage      Int
+  status       vehicle_status @default(AVAILABLE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  maintenance  maintenance[]
+  reservation  reservation[]
+  vehicleimage vehicleimage[]
+}
+
+model vehicleimage {
+  id        Int     @id @default(autoincrement())
+  vehicleId Int
+  imageUrl  String
+  vehicle   vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+}
+
+enum user_role {
+  ADMIN
+  CUSTOMER
+}
+
+enum maintenance_type {
+  INSURANCE
+  OIL_CHANGE
+  SERVICE
+}
+
+enum reservation_status {
+  PENDING
+  CONFIRMED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum vehicle_status {
+  AVAILABLE
+  RESERVED
+  RENTED
+  MAINTENANCE
+}
+
+enum payment_status {
+  PAID
+  UNPAID
+  PARTIAL
+}

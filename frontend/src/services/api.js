@@ -1,0 +1,54 @@
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: '/api',
+  withCredentials: true
+});
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const authAPI = {
+  login: (credentials) => api.post('/auth/login', credentials),
+  logout: () => api.post('/auth/logout'),
+  checkAuth: () => api.get('/auth/check')
+};
+
+export const vehicleAPI = {
+  getAll: (params) => api.get('/vehicles', { params }),
+  getOne: (id) => api.get(`/vehicles/${id}`),
+  create: (formData) => api.post('/vehicles', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, data) => api.put(`/vehicles/${id}`, data, data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}),
+  delete: (id) => api.delete(`/vehicles/${id}`),
+  getHistory: (id) => api.get(`/vehicles/${id}/history`)
+};
+
+export const customerAPI = {
+  getAll: () => api.get('/customers'),
+  create: (formData) => api.post('/customers', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (id, data) => api.put(`/customers/${id}`, data),
+  toggleBlacklist: (id) => api.put(`/customers/${id}/blacklist`)
+};
+
+export const reservationAPI = {
+  getAll: (params) => api.get('/reservations', { params }),
+  create: (data) => api.post('/reservations', data),
+  updateStatus: (id, status) => api.put(`/reservations/${id}/status`, { status }),
+  updatePaymentStatus: (id, paymentStatus) => api.put(`/reservations/${id}/payment-status`, { paymentStatus }),
+  checkIn: (id, formData) => api.post(`/reservations/${id}/checkin`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  checkOut: (id, formData) => api.post(`/reservations/${id}/checkout`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+};
+
+export const planningAPI = {
+  getCalendar: (params) => api.get('/planning/calendar', { params }),
+  getMaintenanceAlerts: () => api.get('/planning/maintenance')
+};
+
+export default api;

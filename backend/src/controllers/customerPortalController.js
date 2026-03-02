@@ -1,0 +1,138 @@
+import prisma from '../config/prisma.js';
+
+export const getAvailableVehicles = async (req, res) => {
+  try {
+    const { startDate, endDate, category } = req.query;
+    
+    let vehicles = await prisma.vehicle.findMany({
+      where: {
+        status: 'AVAILABLE',
+        ...(category && { category })
+      },
+      include: { images: true }
+    });
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      const conflictingReservations = await prisma.reservation.findMany({
+        where: {
+          status: { in: ['CONFIRMED', 'ONGOING'] },
+          OR: [
+            { startDate: { lte: end }, endDate: { gte: start } }
+          ]
+        },
+        select: { vehicleId: true }
+      });
+
+      const bookedVehicleIds = conflictingReservations.map(r => r.vehicleId);
+      vehicles = vehicles.filter(v => !bookedVehicleIds.includes(v.id));
+    }
+
+    res.json(vehicles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const createCustomerReservation = async (req, res) => {
+  try {
+    const { vehicleId, startDate, endDate } = req.body;
+    const customerId = req.customerId;
+
+    const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+    
+    if (customer.isBlacklisted) {
+      return res.status(403).json({ error: 'Your account has been suspended' });
+    }
+
+    const licenseExpiry = new Date(customer.licenseExpiryDate);
+    if (licenseExpiry < new Date()) {
+      return res.status(400).json({ error: 'Your license has expired' });
+    }
+
+    const vehicle = await prisma.vehicle.findUnique({ where: { id: parseInt(vehicleId) } });
+    if (!vehicle || vehicle.status !== 'AVAILABLE') {
+      return res.status(400).json({ error: 'Vehicle not available' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const totalPrice = days * vehicle.dailyPrice;
+
+    const conflicts = await prisma.reservation.findMany({
+      where: {
+        vehicleId: parseInt(vehicleId),
+        status: { in: ['CONFIRMED', 'ONGOING'] },
+        OR: [{ startDate: { lte: end }, endDate: { gte: start } }]
+      }
+    });
+
+    if (conflicts.length > 0) {
+      return res.status(409).json({ error: 'Vehicle not available for selected dates' });
+    }
+
+    const reservation = await prisma.reservation.create({
+      data: {
+        vehicleId: parseInt(vehicleId),
+        customerId,
+        startDate: start,
+        endDate: end,
+        totalPrice,
+        depositPaid: vehicle.deposit,
+        contractNumber: `CNT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        status: 'PENDING'
+      },
+      include: { vehicle: { include: { images: true } } }
+    });
+
+    res.status(201).json(reservation);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getMyReservations = async (req, res) => {
+  try {
+    const reservations = await prisma.reservation.findMany({
+      where: { customerId: req.customerId },
+      include: { vehicle: { include: { images: true } }, checkIn: true, checkOut: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(reservations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const cancelReservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const reservation = await prisma.reservation.findUnique({ where: { id: parseInt(id) } });
+    
+    if (!reservation || reservation.customerId !== req.customerId) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    if (reservation.status === 'ONGOING' || reservation.status === 'COMPLETED') {
+      return res.status(400).json({ error: 'Cannot cancel this reservation' });
+    }
+
+    await prisma.reservation.update({
+      where: { id: parseInt(id) },
+      data: { status: 'CANCELLED' }
+    });
+
+    await prisma.vehicle.update({
+      where: { id: reservation.vehicleId },
+      data: { status: 'AVAILABLE' }
+    });
+
+    res.json({ message: 'Reservation cancelled' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
