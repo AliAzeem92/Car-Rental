@@ -20,6 +20,7 @@ model user {
   licenseExpiryDate DateTime?
   idCardUrl         String?
   licenseUrl        String?
+  profileImageUrl   String?
   isBlacklisted     Boolean       @default(false)
   createdAt         DateTime      @default(now())
   reservation       reservation[]

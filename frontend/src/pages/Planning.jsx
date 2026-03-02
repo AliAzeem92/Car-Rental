@@ -10,7 +10,7 @@ const Planning = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [statusFilters, setStatusFilters] = useState(['CONFIRMED', 'ONGOING']);
+  const [statusFilters] = useState(['CONFIRMED', 'ONGOING']);
 
   useEffect(() => {
     loadCalendar();
@@ -33,11 +33,7 @@ const Planning = () => {
     return data.reservations.filter(r => statusFilters.includes(r.status));
   };
 
-  const toggleStatusFilter = (status) => {
-    setStatusFilters(prev => 
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-    );
-  };
+
 
   const changeMonth = (delta) => {
     setIsAnimating(true);
@@ -90,33 +86,15 @@ const Planning = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-6 mb-4">
+          <span className="text-sm font-medium text-gray-600">Legend:</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-600">Filter:</span>
-            <div className="flex items-center gap-3">
-              {Object.values(RESERVATION_STATUS).map(status => (
-                <button
-                  key={status.value}
-                  onClick={() => toggleStatusFilter(status.value)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 transition ${
-                    statusFilters.includes(status.value)
-                      ? `${status.color} border-transparent text-white`
-                      : 'bg-white border-gray-300 text-gray-600 hover:border-gray-400'
-                  }`}
-                >
-                  <div className={`w-4 h-4 rounded flex items-center justify-center ${
-                    statusFilters.includes(status.value) ? 'bg-white/30' : 'border-2 border-current'
-                  }`}>
-                    {statusFilters.includes(status.value) && (
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-sm font-medium">{status.label}</span>
-                </button>
-              ))}
-            </div>
+            <div className="w-4 h-4 rounded bg-blue-500"></div>
+            <span className="text-sm text-gray-700">Ongoing</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-green-500"></div>
+            <span className="text-sm text-gray-700">Confirmed</span>
           </div>
         </div>
 
@@ -325,7 +303,43 @@ const WeekView = ({ data, currentDate, isAnimating }) => {
     });
   };
 
+  const getEventsForWeek = () => {
+    const weekDays = getWeekDays();
+    const weekEvents = [];
+    
+    data.reservations.forEach(event => {
+      const eventStart = new Date(event.startDate);
+      const eventEnd = new Date(event.endDate);
+      eventStart.setHours(0, 0, 0, 0);
+      eventEnd.setHours(0, 0, 0, 0);
+      
+      let foundStart = false;
+      let startDay = -1;
+      let span = 0;
+      
+      weekDays.forEach((day, dayIndex) => {
+        const dayDate = new Date(day);
+        dayDate.setHours(0, 0, 0, 0);
+        
+        if (dayDate >= eventStart && dayDate <= eventEnd) {
+          if (!foundStart) {
+            foundStart = true;
+            startDay = dayIndex;
+          }
+          span++;
+        }
+      });
+      
+      if (foundStart) {
+        weekEvents.push({ ...event, startDay, span });
+      }
+    });
+    
+    return weekEvents;
+  };
+
   const weekDays = getWeekDays();
+  const weekEvents = getEventsForWeek();
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   return (
@@ -345,36 +359,43 @@ const WeekView = ({ data, currentDate, isAnimating }) => {
           );
         })}
       </div>
+      <div className="grid grid-cols-8 relative">
+        <div className="border-r py-2 px-3 text-xs text-gray-600 font-medium border-b bg-gray-50">all-day</div>
+        {weekDays.map((day, i) => (
+          <div key={i} className="border-r last:border-r-0 border-b min-h-[80px] bg-white"></div>
+        ))}
+        <div className="absolute top-0 left-0 right-0 pt-2 px-2 space-y-1 pointer-events-none" style={{ marginLeft: '12.5%' }}>
+          {weekEvents.map((event) => (
+            <div
+              key={event.id}
+              className={`text-xs px-2 py-1 text-white truncate pointer-events-auto cursor-pointer rounded ${RESERVATION_STATUS[event.status].color}`}
+              style={{
+                marginLeft: `${event.startDay * 12.5}%`,
+                width: `${event.span * 12.5}%`
+              }}
+              title={`${event.user.firstName} ${event.user.lastName} - ${event.vehicle.brand} ${event.vehicle.model} (${event.vehicle.licensePlate})`}
+            >
+              {event.user.firstName} {event.user.lastName} - {event.vehicle.brand} {event.vehicle.model}
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="max-h-[600px] overflow-y-auto">
         <div className="grid grid-cols-8">
           <div className="border-r">
-            <div className="py-2 px-3 text-xs text-gray-600 font-medium border-b">all-day</div>
             {hours.map(hour => (
               <div key={hour} className="py-4 px-3 text-xs text-gray-600 border-b">
                 {hour === 0 ? '12am' : hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour - 12}pm`}
               </div>
             ))}
           </div>
-          {weekDays.map((day, i) => {
-            const events = getEventsForDay(day);
-            return (
-              <div key={i} className="border-r last:border-r-0">
-                <div className="py-2 px-2 border-b min-h-[40px]">
-                  {events.map(event => (
-                    <div
-                      key={event.id}
-                      className={`text-xs px-2 py-1 rounded text-white mb-1 ${RESERVATION_STATUS[event.status].color}`}
-                    >
-                      {event.user.firstName} {event.user.lastName} - {event.vehicle.brand} {event.vehicle.model}
-                    </div>
-                  ))}
-                </div>
-                {hours.map(hour => (
-                  <div key={hour} className="py-4 px-2 border-b bg-white hover:bg-blue-50"></div>
-                ))}
-              </div>
-            );
-          })}
+          {weekDays.map((day, i) => (
+            <div key={i} className="border-r last:border-r-0">
+              {hours.map(hour => (
+                <div key={hour} className="py-4 px-2 border-b bg-white hover:bg-blue-50"></div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>

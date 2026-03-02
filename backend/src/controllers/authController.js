@@ -54,7 +54,7 @@ export const checkAuth = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, role: true, firstName: true, lastName: true }
+      select: { id: true, email: true, role: true, firstName: true, lastName: true, profileImageUrl: true }
     });
     res.json({ user });
   } catch (error) {
@@ -154,6 +154,30 @@ export const resetPassword = async (req, res) => {
     ]);
 
     res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.userId;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+
+    res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

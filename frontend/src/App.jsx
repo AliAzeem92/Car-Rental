@@ -12,6 +12,7 @@ import Reservations from './pages/Reservations';
 import Planning from './pages/Planning';
 import Customers from './pages/Customers';
 import Maintenance from './pages/Maintenance';
+import Settings from './pages/Settings';
 import CustomerPortal from './pages/CustomerPortal';
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
             <Route path="planning" element={<Planning />} />
             <Route path="customers" element={<Customers />} />
             <Route path="maintenance" element={<Maintenance />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

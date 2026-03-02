@@ -18,20 +18,43 @@ export const updateCustomer = async (req, res) => {
     const { id } = req.params;
     const { firstName, lastName, email, phone, address, licenseNumber, licenseExpiryDate } = req.body;
 
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
+    if (address) updateData.address = address;
+    if (licenseNumber) updateData.licenseNumber = licenseNumber;
+    if (licenseExpiryDate) updateData.licenseExpiryDate = new Date(licenseExpiryDate);
+
     const customer = await prisma.user.update({
       where: { id: parseInt(id) },
-      data: {
-        firstName,
-        lastName,
-        email,
-        phone,
-        address,
-        licenseNumber,
-        licenseExpiryDate: new Date(licenseExpiryDate)
-      }
+      data: updateData
     });
 
     res.json(customer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const uploadProfileImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const { uploadToCloudinary } = await import('../utils/cloudinary.js');
+    const imageUrl = await uploadToCloudinary(req.file.buffer, 'profiles');
+
+    const customer = await prisma.user.update({
+      where: { id: parseInt(id) },
+      data: { profileImageUrl: imageUrl }
+    });
+
+    res.json({ imageUrl, customer });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

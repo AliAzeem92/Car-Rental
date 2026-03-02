@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Car, Users, Plus, UserPlus, CalendarDays, CheckCircle } from 'lucide-react';
-import { vehicleAPI, reservationAPI, customerAPI, planningAPI } from '../services/api';
+import { Calendar, Car, Users, Plus, UserPlus, CalendarDays, CheckCircle, AlertTriangle } from 'lucide-react';
+import { vehicleAPI, reservationAPI, customerAPI } from '../services/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -126,9 +126,9 @@ const Dashboard = () => {
               <Calendar className="w-8 h-8 text-purple-600 mx-auto mb-2" />
               <p className="font-semibold text-gray-800">View Calendar</p>
             </button>
-            <button className="bg-gray-100 hover:bg-gray-200 p-6 rounded-xl transition text-center">
-              <CalendarDays className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="font-semibold text-gray-800">New Calendar</p>
+            <button onClick={() => navigate('/dashboard/maintenance')} className="bg-red-100 hover:bg-red-200 p-6 rounded-xl transition text-center">
+              <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+              <p className="font-semibold text-gray-800">Maintenance</p>
             </button>
             <button onClick={() => navigate('/dashboard/customers')} className="bg-indigo-100 hover:bg-indigo-200 p-6 rounded-xl transition text-center">
               <UserPlus className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
