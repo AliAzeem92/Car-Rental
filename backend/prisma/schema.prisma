@@ -8,23 +8,25 @@ datasource db {
 }
 
 model user {
-  id                Int           @id @default(autoincrement())
-  email             String        @unique
-  password          String
-  role              user_role     @default(CUSTOMER)
-  firstName         String?
-  lastName          String?
-  phone             String?
-  address           String?
-  licenseNumber     String?       @unique
-  licenseExpiryDate DateTime?
-  idCardUrl         String?
-  licenseUrl        String?
-  profileImageUrl   String?
-  isBlacklisted     Boolean       @default(false)
-  createdAt         DateTime      @default(now())
-  reservation       reservation[]
-  passwordreset     passwordreset[]
+  id                       Int                        @id @default(autoincrement())
+  email                    String                     @unique
+  password                 String
+  role                     user_role                  @default(CUSTOMER)
+  firstName                String?
+  lastName                 String?
+  phone                    String?
+  address                  String?
+  licenseNumber            String?                    @unique
+  licenseExpiryDate        DateTime?
+  idCardUrl                String?
+  licenseUrl               String?
+  profileImageUrl          String?
+  isBlacklisted            Boolean                    @default(false)
+  createdAt                DateTime                   @default(now())
+  reservation              reservation[]
+  passwordreset            passwordreset[]
+  reservationStatusHistory reservationstatushistory[]
+  paymentStatusHistory     paymentstatushistory[]
 }
 
 model passwordreset {
@@ -71,25 +73,57 @@ model maintenance {
 }
 
 model reservation {
-  id             Int                @id @default(autoincrement())
-  vehicleId      Int
-  userId         Int
-  startDate      DateTime
-  endDate        DateTime
-  totalPrice     Float
-  depositPaid    Float
-  paymentStatus  payment_status     @default(UNPAID)
-  status         reservation_status @default(PENDING)
-  contractNumber String             @unique
-  contractPdfUrl String?
-  createdAt      DateTime           @default(now())
-  checkin        checkin?
-  checkout       checkout?
-  user           user               @relation(fields: [userId], references: [id])
-  vehicle        vehicle            @relation(fields: [vehicleId], references: [id])
+  id                   Int                        @id @default(autoincrement())
+  vehicleId            Int
+  userId               Int
+  startDate            DateTime
+  endDate              DateTime
+  totalPrice           Float
+  depositPaid          Float
+  paymentStatus        payment_status             @default(UNPAID)
+  status               reservation_status         @default(PENDING)
+  contractNumber       String                     @unique
+  contractPdfUrl       String?
+  createdAt            DateTime                   @default(now())
+  checkin              checkin?
+  checkout             checkout?
+  user                 user                       @relation(fields: [userId], references: [id])
+  vehicle              vehicle                    @relation(fields: [vehicleId], references: [id])
+  statusHistory        reservationstatushistory[]
+  paymentHistory       paymentstatushistory[]
 
   @@index([userId])
   @@index([vehicleId])
+}
+
+model reservationstatushistory {
+  id            Int                @id @default(autoincrement())
+  reservationId Int
+  fromStatus    reservation_status
+  toStatus      reservation_status
+  changedBy     Int
+  reason        String?
+  createdAt     DateTime           @default(now())
+  reservation   reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user          user               @relation(fields: [changedBy], references: [id])
+
+  @@index([reservationId])
+  @@index([changedBy])
+}
+
+model paymentstatushistory {
+  id            Int            @id @default(autoincrement())
+  reservationId Int
+  fromStatus    payment_status
+  toStatus      payment_status
+  changedBy     Int
+  reason        String?
+  createdAt     DateTime       @default(now())
+  reservation   reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user          user           @relation(fields: [changedBy], references: [id])
+
+  @@index([reservationId])
+  @@index([changedBy])
 }
 
 model vehicle {

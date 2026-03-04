@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2 } from 'lucide-react';
-import { vehicleAPI } from '../services/api';
+import { vehicleAPI, maintenanceAPI } from '../services/api';
 import StatusDropdown from '../components/StatusDropdown';
 import Dropdown from '../components/Dropdown';
 import Modal from '../components/Modal';
@@ -71,7 +71,9 @@ const Vehicles = () => {
     setLoading(true);
     try {
       const formDataObj = new FormData();
-      Object.keys(formData).forEach(key => {
+      // Only vehicle fields
+      const vehicleFields = ['brand', 'model', 'year', 'licensePlate', 'category', 'color', 'seats', 'transmission', 'fuelType', 'status', 'description', 'features', 'dailyPrice', 'deposit', 'mileage'];
+      vehicleFields.forEach(key => {
         if (formData[key]) formDataObj.append(key, formData[key]);
       });
       
@@ -80,7 +82,18 @@ const Vehicles = () => {
         formDataObj.append('images', compressed);
       }
 
-      await vehicleAPI.create(formDataObj);
+      const { data: vehicle } = await vehicleAPI.create(formDataObj);
+      
+      // Create maintenance if provided
+      if (formData.insuranceExpiry || formData.nextOilChange || formData.nextService) {
+        await maintenanceAPI.update({
+          vehicleId: vehicle.id,
+          insuranceExpiry: formData.insuranceExpiry || '',
+          nextOilChange: formData.nextOilChange || '',
+          nextService: formData.nextService || ''
+        });
+      }
+      
       showToast('Vehicle created successfully!', 'success');
       setShowModal(false);
       resetForm();
@@ -100,6 +113,7 @@ const Vehicles = () => {
     }
     setLoading(true);
     try {
+      // Vehicle payload
       const formDataObj = new FormData();
       formDataObj.append('brand', editModal.brand);
       formDataObj.append('model', editModal.model);
@@ -108,7 +122,6 @@ const Vehicles = () => {
       formDataObj.append('dailyPrice', editModal.dailyPrice);
       formDataObj.append('deposit', editModal.deposit);
       formDataObj.append('mileage', editModal.mileage);
-      formDataObj.append('status', editModal.status);
       if (editModal.year) formDataObj.append('year', editModal.year);
       if (editModal.color) formDataObj.append('color', editModal.color);
       if (editModal.seats) formDataObj.append('seats', editModal.seats);
@@ -116,9 +129,6 @@ const Vehicles = () => {
       if (editModal.fuelType) formDataObj.append('fuelType', editModal.fuelType);
       if (editModal.description) formDataObj.append('description', editModal.description);
       if (editModal.features) formDataObj.append('features', editModal.features);
-      formDataObj.append('insuranceExpiry', editModal.insuranceExpiry || '');
-      formDataObj.append('nextOilChange', editModal.nextOilChange || '');
-      formDataObj.append('nextService', editModal.nextService || '');
       formDataObj.append('existingImageIds', JSON.stringify(existingImages.map(img => img.id)));
       
       for (const img of images) {
@@ -126,13 +136,29 @@ const Vehicles = () => {
         formDataObj.append('images', compressed);
       }
       
+      // Update vehicle
       await vehicleAPI.update(editModal.id, formDataObj);
+      
+      // Maintenance payload
+      const maintenancePayload = {
+        vehicleId: editModal.id,
+        insuranceId: editModal.insuranceId || null,
+        insuranceExpiry: editModal.insuranceExpiry || '',
+        oilChangeId: editModal.oilChangeId || null,
+        nextOilChange: editModal.nextOilChange || '',
+        serviceId: editModal.serviceId || null,
+        nextService: editModal.nextService || ''
+      };
+      
+      // Update maintenance
+      await maintenanceAPI.update(maintenancePayload);
+      
       showToast('Vehicle updated successfully!', 'success');
       setEditModal(null);
       resetForm();
       loadVehicles();
     } catch (error) {
-      showToast('Failed to update vehicle', 'error');
+      showToast(error.response?.data?.message || 'Failed to update vehicle', 'error');
     } finally {
       setLoading(false);
     }
@@ -150,13 +176,7 @@ const Vehicles = () => {
   };
 
   const handleStatusChange = async (id, status) => {
-    try {
-      await vehicleAPI.update(id, { status });
-      showToast('Status updated', 'success');
-      loadVehicles();
-    } catch (error) {
-      showToast('Failed to update status', 'error');
-    }
+    showToast('Vehicle status is managed automatically by the system', 'warning');
   };
 
   const resetForm = () => {
@@ -176,16 +196,18 @@ const Vehicles = () => {
     setExistingImages(vehicle.vehicleimage || []);
     setImages([]);
     
-    // Load maintenance data
     if (vehicle.maintenance && vehicle.maintenance.length > 0) {
-      const insurance = vehicle.maintenance.find(m => m.type === 'INSURANCE');
-      const oilChange = vehicle.maintenance.find(m => m.type === 'OIL_CHANGE');
-      const service = vehicle.maintenance.find(m => m.type === 'SERVICE');
+      const insurance = vehicle.maintenance.find(m => m.type === 'INSURANCE' && !m.isCompleted);
+      const oilChange = vehicle.maintenance.find(m => m.type === 'OIL_CHANGE' && !m.isCompleted);
+      const service = vehicle.maintenance.find(m => m.type === 'SERVICE' && !m.isCompleted);
       
       setEditModal({
         ...vehicle,
+        insuranceId: insurance?.id || null,
         insuranceExpiry: insurance ? new Date(insurance.dueDate).toISOString().split('T')[0] : '',
+        oilChangeId: oilChange?.id || null,
         nextOilChange: oilChange ? oilChange.dueMileage : '',
+        serviceId: service?.id || null,
         nextService: service ? new Date(service.dueDate).toISOString().split('T')[0] : ''
       });
     }
@@ -264,13 +286,14 @@ const Vehicles = () => {
                 <td className="px-6 py-4 text-xs font-semibold text-blue-600">€{vehicle.dailyPrice.toFixed(2)}</td>
                 <td className="px-6 py-4 text-xs text-gray-800">{vehicle.mileage} km</td>
                 <td className="px-6 py-4">
-                  <StatusDropdown
-                    value={vehicle.status}
-                    onChange={(id, status) => handleStatusChange(vehicle.id, status)}
-                    reservationId={vehicle.id}
-                    type="vehicle"
-                    width="w-[130px]"
-                  />
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
+                    vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
+                    vehicle.status === 'RESERVED' ? 'bg-yellow-100 text-yellow-700' :
+                    vehicle.status === 'RENTED' ? 'bg-blue-100 text-blue-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {vehicle.status}
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">

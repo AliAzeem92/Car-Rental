@@ -6,6 +6,7 @@ import vehicleRoutes from './routes/vehicleRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
 import planningRoutes from './routes/planningRoutes.js';
+import maintenanceRoutes from './routes/maintenanceRoutes.js';
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/planning', planningRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 app.get('/', (req, res) => {
   res.send('🚗 Car Rental API is running!');

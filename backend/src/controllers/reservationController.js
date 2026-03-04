@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { ReservationService } from '../services/reservationService.js';
 import { generateContractPDF } from '../utils/pdfGenerator.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { streamContractPDF } from '../utils/pdfStream.js';
@@ -98,43 +99,46 @@ export const updateReservationStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const userId = req.userId;
 
-    const reservation = await prisma.reservation.findUnique({
-      where: { id: parseInt(id) },
-      include: { vehicle: true, user: true }
+    console.log('📥 Update Reservation Status Request:', {
+      reservationId: id,
+      requestedStatus: status,
+      userId
     });
 
-    let contractPdfUrl = reservation.contractPdfUrl;
+    const reservation = await ReservationService.updateReservationStatus(
+      parseInt(id),
+      status,
+      userId
+    );
 
-    if (status === 'CONFIRMED' && !contractPdfUrl) {
+    // Generate PDF on CONFIRMED
+    if (status === 'CONFIRMED' && !reservation.contractPdfUrl) {
       try {
-        contractPdfUrl = await generateContractPDF(reservation, reservation.vehicle, reservation.user);
-        console.log('✅ PDF generated:', contractPdfUrl);
+        const contractPdfUrl = await generateContractPDF(
+          reservation,
+          reservation.vehicle,
+          reservation.user
+        );
+        await prisma.reservation.update({
+          where: { id: parseInt(id) },
+          data: { contractPdfUrl }
+        });
+        reservation.contractPdfUrl = contractPdfUrl;
       } catch (pdfError) {
-        console.error('❌ PDF generation failed:', pdfError.message);
+        console.error('PDF generation failed:', pdfError.message);
       }
     }
 
-    const updated = await prisma.reservation.update({
-      where: { id: parseInt(id) },
-      data: { status, contractPdfUrl },
-      include: { vehicle: true, user: true }
-    });
-
-    let vehicleStatus = 'AVAILABLE';
-    if (status === 'CONFIRMED') vehicleStatus = 'RESERVED';
-    if (status === 'ONGOING') vehicleStatus = 'RENTED';
-    if (status === 'COMPLETED' || status === 'CANCELLED') vehicleStatus = 'AVAILABLE';
-
-    await prisma.vehicle.update({
-      where: { id: reservation.vehicleId },
-      data: { status: vehicleStatus }
-    });
-
-    res.json(updated);
+    console.log('✅ Status updated successfully');
+    res.json(reservation);
   } catch (error) {
-    console.error('Status update error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Status update failed:', error.message);
+    res.status(error.statusCode || 400).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 
@@ -142,16 +146,28 @@ export const updatePaymentStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { paymentStatus } = req.body;
+    const userId = req.userId;
 
-    const updated = await prisma.reservation.update({
-      where: { id: parseInt(id) },
-      data: { paymentStatus },
-      include: { vehicle: true, user: true }
+    console.log('📥 Update Payment Status Request:', {
+      reservationId: id,
+      requestedPaymentStatus: paymentStatus,
+      userId
     });
 
-    res.json(updated);
+    const reservation = await ReservationService.updatePaymentStatus(
+      parseInt(id),
+      paymentStatus,
+      userId
+    );
+
+    console.log('✅ Payment status updated successfully');
+    res.json(reservation);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('❌ Payment status update failed:', error.message);
+    res.status(error.statusCode || 400).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 };
 

@@ -4,8 +4,10 @@ import { reservationAPI, vehicleAPI, customerAPI } from '../services/api';
 import StatusDropdown from '../components/StatusDropdown';
 import Modal from '../components/Modal';
 import { RESERVATION_STATUS } from '../utils/constants';
+import { useToast } from '../context/ToastContext';
 
 const Reservations = () => {
+  const { showToast } = useToast();
   const [reservations, setReservations] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -62,8 +64,10 @@ const Reservations = () => {
         await reservationAPI.updateStatus(id, status);
       }
       loadData();
+      showToast('Status updated successfully', 'success');
     } catch (error) {
-      alert('Failed to update');
+      const message = error.response?.data?.message || 'Failed to update status';
+      showToast(message, 'error');
     }
   };
 

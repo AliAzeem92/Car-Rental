@@ -46,8 +46,7 @@ export const getMaintenanceAlerts = async (req, res) => {
   try {
     const alerts = await prisma.maintenance.findMany({
       where: {
-        isCompleted: false,
-        dueDate: { lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }
+        isCompleted: false
       },
       include: { vehicle: true },
       orderBy: { dueDate: 'asc' }

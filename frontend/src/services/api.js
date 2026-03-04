@@ -51,4 +51,9 @@ export const planningAPI = {
   getMaintenanceAlerts: () => api.get('/planning/maintenance')
 };
 
+export const maintenanceAPI = {
+  markComplete: (id) => api.put(`/maintenance/${id}/complete`),
+  update: (data) => api.put('/maintenance/update', data)
+};
+
 export default api;

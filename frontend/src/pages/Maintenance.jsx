@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Calendar, Car, CheckCircle2 } from 'lucide-react';
-import { planningAPI, vehicleAPI } from '../services/api';
+import { planningAPI, maintenanceAPI } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
@@ -69,14 +69,13 @@ const Maintenance = () => {
     if (!updateModal) return;
     setUpdating(true);
     try {
-      await vehicleAPI.update(updateModal.vehicle.id, {
-        [`${updateModal.type === 'INSURANCE' ? 'insuranceExpiry' : updateModal.type === 'OIL_CHANGE' ? 'nextOilChange' : 'nextService'}`]: ''
-      });
-      showToast('Maintenance marked as complete', 'success');
+      const { data } = await maintenanceAPI.markComplete(updateModal.id);
+      showToast(data.message || 'Maintenance marked as complete', 'success');
       setUpdateModal(null);
       loadAlerts();
     } catch (error) {
-      showToast('Failed to update maintenance', 'error');
+      const message = error.response?.data?.message || 'Failed to update maintenance';
+      showToast(message, 'error');
     } finally {
       setUpdating(false);
     }
