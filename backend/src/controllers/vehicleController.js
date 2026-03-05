@@ -79,7 +79,7 @@ export const createVehicle = async (req, res) => {
       });
     }
 
-    if (nextOilChange && nextOilChange.trim() && nextOilChange !== '') {
+    if (nextOilChange && String(nextOilChange).trim() !== '') {
       await prisma.maintenance.create({
         data: {
           vehicleId: vehicle.id,
@@ -164,7 +164,7 @@ export const updateVehicle = async (req, res) => {
 
     if (nextOilChange !== undefined) {
       await prisma.maintenance.deleteMany({ where: { vehicleId: parseInt(id), type: 'OIL_CHANGE' } });
-      if (nextOilChange && nextOilChange.trim() && nextOilChange !== '') {
+      if (nextOilChange && String(nextOilChange).trim() !== '') {
         await prisma.maintenance.create({
           data: { vehicleId: parseInt(id), type: 'OIL_CHANGE', dueDate: new Date(), dueMileage: parseInt(nextOilChange) }
         });

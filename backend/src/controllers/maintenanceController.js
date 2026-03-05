@@ -44,7 +44,7 @@ export const updateMaintenance = async (req, res) => {
 
     // Handle Insurance
     if (insuranceExpiry !== undefined) {
-      if (insuranceExpiry) {
+      if (insuranceExpiry && insuranceExpiry !== '') {
         if (insuranceId) {
           await prisma.maintenance.update({
             where: { id: parseInt(insuranceId) },
@@ -65,16 +65,14 @@ export const updateMaintenance = async (req, res) => {
 
     // Handle Oil Change
     if (nextOilChange !== undefined) {
-      if (nextOilChange) {
-        const futureDate = new Date();
-        futureDate.setFullYear(futureDate.getFullYear() + 1);
-        
+      const oilKm = Number(nextOilChange);
+      if (oilKm && oilKm > 0) {
         if (oilChangeId) {
           await prisma.maintenance.update({
             where: { id: parseInt(oilChangeId) },
             data: { 
-              dueMileage: parseInt(nextOilChange),
-              dueDate: futureDate
+              dueMileage: oilKm,
+              dueDate: new Date()
             }
           });
         } else {
@@ -82,8 +80,8 @@ export const updateMaintenance = async (req, res) => {
             data: { 
               vehicleId: parseInt(vehicleId), 
               type: 'OIL_CHANGE', 
-              dueDate: futureDate, 
-              dueMileage: parseInt(nextOilChange) 
+              dueDate: new Date(), 
+              dueMileage: oilKm 
             }
           });
         }
@@ -97,7 +95,7 @@ export const updateMaintenance = async (req, res) => {
 
     // Handle Service
     if (nextService !== undefined) {
-      if (nextService) {
+      if (nextService && nextService !== '') {
         if (serviceId) {
           await prisma.maintenance.update({
             where: { id: parseInt(serviceId) },
