@@ -5,13 +5,14 @@ import {
   isTerminalReservationStatus,
   isTerminalPaymentStatus
 } from './stateMachine.js';
+import { CheckInOutService } from './checkInOutService.js';
 
 export class ReservationService {
   
   static async updateReservationStatus(reservationId, newStatus, userId) {
     const reservation = await prisma.reservation.findUnique({
       where: { id: reservationId },
-      include: { vehicle: true, user: true }
+      include: { vehicle: true, user: true, checkout: true, checkin: true }
     });
 
     if (!reservation) {
@@ -31,13 +32,18 @@ export class ReservationService {
       throw error;
     }
 
+    // Handle automatic check-out when moving to ONGOING
+    if (newStatus === 'ONGOING' && !reservation.checkout) {
+      await CheckInOutService.createCheckOut(reservationId, userId);
+    }
+
     // Update reservation with history tracking
     const updated = await prisma.$transaction(async (tx) => {
       // Update reservation
       const updatedReservation = await tx.reservation.update({
         where: { id: reservationId },
         data: { status: newStatus },
-        include: { vehicle: true, user: true }
+        include: { vehicle: true, user: true, checkout: true, checkin: true }
       });
 
       // Create history record

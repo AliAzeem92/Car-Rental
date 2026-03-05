@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
+import { MaintenanceService } from '../services/maintenanceService.js';
 
 export const getVehicles = async (req, res) => {
   try {
@@ -55,7 +56,7 @@ export const createVehicle = async (req, res) => {
       category,
       dailyPrice: parseFloat(dailyPrice),
       deposit: deposit ? parseFloat(deposit) : 0,
-      mileage: mileage ? parseInt(mileage) : 0
+      currentMileage: mileage ? parseInt(mileage) : 0
     };
 
     if (year) vehicleData.year = parseInt(year);
@@ -66,37 +67,16 @@ export const createVehicle = async (req, res) => {
     if (status) vehicleData.status = status;
     if (description) vehicleData.description = description;
     if (features) vehicleData.features = features;
+    if (nextOilChange) vehicleData.nextOilChangeMileage = parseInt(nextOilChange);
 
     const vehicle = await prisma.vehicle.create({ data: vehicleData });
 
-    if (insuranceExpiry && insuranceExpiry.trim() && insuranceExpiry !== '') {
-      await prisma.maintenance.create({
-        data: {
-          vehicleId: vehicle.id,
-          type: 'INSURANCE',
-          dueDate: new Date(insuranceExpiry)
-        }
-      });
-    }
-
-    if (nextOilChange && String(nextOilChange).trim() !== '') {
-      await prisma.maintenance.create({
-        data: {
-          vehicleId: vehicle.id,
-          type: 'OIL_CHANGE',
-          dueDate: new Date(),
-          dueMileage: parseInt(nextOilChange)
-        }
-      });
-    }
-
-    if (nextService && nextService.trim() && nextService !== '') {
-      await prisma.maintenance.create({
-        data: {
-          vehicleId: vehicle.id,
-          type: 'SERVICE',
-          dueDate: new Date(nextService)
-        }
+    // Create maintenance records using service
+    if (insuranceExpiry || nextOilChange || nextService) {
+      await MaintenanceService.createMaintenanceForVehicle(vehicle.id, {
+        insuranceExpiry,
+        nextOilChange,
+        nextService
       });
     }
 
@@ -127,6 +107,9 @@ export const updateVehicle = async (req, res) => {
     const { id } = req.params;
     const { existingImageIds, insuranceExpiry, nextOilChange, nextService, ...updateData } = req.body;
 
+    console.log('Update vehicle data received:', updateData);
+    console.log('Maintenance dates received:', { nextServiceDate: updateData.nextServiceDate, insuranceExpiryDate: updateData.insuranceExpiryDate });
+
     if (updateData.licensePlate) {
       const existing = await prisma.vehicle.findFirst({
         where: { licensePlate: updateData.licensePlate, id: { not: parseInt(id) } }
@@ -143,7 +126,27 @@ export const updateVehicle = async (req, res) => {
     if (updateData.category) vehicleData.category = updateData.category;
     if (updateData.dailyPrice) vehicleData.dailyPrice = parseFloat(updateData.dailyPrice);
     if (updateData.deposit !== undefined) vehicleData.deposit = parseFloat(updateData.deposit);
-    if (updateData.mileage !== undefined) vehicleData.mileage = parseInt(updateData.mileage);
+    if (updateData.currentMileage !== undefined && updateData.currentMileage !== '') {
+      vehicleData.currentMileage = parseInt(updateData.currentMileage);
+    }
+    if (updateData.nextOilChangeMileage !== undefined) {
+      vehicleData.nextOilChangeMileage = updateData.nextOilChangeMileage ? parseInt(updateData.nextOilChangeMileage) : null;
+    }
+    if (nextOilChange !== undefined) {
+      vehicleData.nextOilChangeMileage = nextOilChange ? parseInt(nextOilChange) : null;
+    }
+    if (updateData.nextServiceDate !== undefined) {
+      vehicleData.nextServiceDate = updateData.nextServiceDate ? new Date(updateData.nextServiceDate) : null;
+    }
+    if (updateData.insuranceExpiryDate !== undefined) {
+      vehicleData.insuranceExpiryDate = updateData.insuranceExpiryDate ? new Date(updateData.insuranceExpiryDate) : null;
+    }
+    if (nextService !== undefined) {
+      vehicleData.nextServiceDate = nextService ? new Date(nextService) : null;
+    }
+    if (insuranceExpiry !== undefined) {
+      vehicleData.insuranceExpiryDate = insuranceExpiry ? new Date(insuranceExpiry) : null;
+    }
     if (updateData.status) vehicleData.status = updateData.status;
     if (updateData.year) vehicleData.year = parseInt(updateData.year);
     if (updateData.color) vehicleData.color = updateData.color;
@@ -153,31 +156,15 @@ export const updateVehicle = async (req, res) => {
     if (updateData.description !== undefined) vehicleData.description = updateData.description;
     if (updateData.features !== undefined) vehicleData.features = updateData.features;
 
-    if (insuranceExpiry !== undefined) {
-      await prisma.maintenance.deleteMany({ where: { vehicleId: parseInt(id), type: 'INSURANCE' } });
-      if (insuranceExpiry && insuranceExpiry.trim() && insuranceExpiry !== '') {
-        await prisma.maintenance.create({
-          data: { vehicleId: parseInt(id), type: 'INSURANCE', dueDate: new Date(insuranceExpiry) }
-        });
-      }
-    }
+    console.log('Processed vehicle data:', vehicleData);
 
-    if (nextOilChange !== undefined) {
-      await prisma.maintenance.deleteMany({ where: { vehicleId: parseInt(id), type: 'OIL_CHANGE' } });
-      if (nextOilChange && String(nextOilChange).trim() !== '') {
-        await prisma.maintenance.create({
-          data: { vehicleId: parseInt(id), type: 'OIL_CHANGE', dueDate: new Date(), dueMileage: parseInt(nextOilChange) }
-        });
-      }
-    }
-
-    if (nextService !== undefined) {
-      await prisma.maintenance.deleteMany({ where: { vehicleId: parseInt(id), type: 'SERVICE' } });
-      if (nextService && nextService.trim() && nextService !== '') {
-        await prisma.maintenance.create({
-          data: { vehicleId: parseInt(id), type: 'SERVICE', dueDate: new Date(nextService) }
-        });
-      }
+    // Update maintenance using service (replaces delete-then-create pattern)
+    if (insuranceExpiry !== undefined || nextOilChange !== undefined || nextService !== undefined) {
+      await MaintenanceService.upsertMaintenanceForVehicle(id, {
+        insuranceExpiry,
+        nextOilChange,
+        nextService
+      });
     }
 
     if (existingImageIds) {
@@ -208,13 +195,16 @@ export const updateVehicle = async (req, res) => {
       include: { vehicleimage: true, maintenance: true }
     });
 
+    // Generate alerts immediately after vehicle update
+    await MaintenanceService.generateAlertsForVehicle(parseInt(id));
+
+    console.log('Updated vehicle:', vehicle);
     res.json(vehicle);
   } catch (error) {
     console.error('Update error:', error);
     res.status(500).json({ error: error.message });
   }
 };
-
 export const deleteVehicle = async (req, res) => {
   try {
     await prisma.vehicle.delete({ where: { id: parseInt(req.params.id) } });

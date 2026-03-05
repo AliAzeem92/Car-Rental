@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { MaintenanceService } from '../services/maintenanceService.js';
 
 export const getCalendar = async (req, res) => {
   try {
@@ -44,40 +45,7 @@ export const getCalendar = async (req, res) => {
 
 export const getMaintenanceAlerts = async (req, res) => {
   try {
-    const currentDate = new Date();
-    
-    // Get date-based alerts (INSURANCE, SERVICE)
-    const dateBasedAlerts = await prisma.maintenance.findMany({
-      where: {
-        isCompleted: false,
-        type: { in: ['INSURANCE', 'SERVICE'] },
-        dueDate: { lte: currentDate }
-      },
-      include: { vehicle: true },
-      orderBy: { dueDate: 'asc' }
-    });
-
-    // Get mileage-based alerts (OIL_CHANGE)
-    // Note: Cannot filter by mileage in Prisma query due to cross-table comparison
-    const oilChangeRecords = await prisma.maintenance.findMany({
-      where: {
-        isCompleted: false,
-        type: 'OIL_CHANGE',
-        dueMileage: { not: null }
-      },
-      include: { vehicle: true },
-      orderBy: { dueDate: 'asc' }
-    });
-
-    // Filter oil changes by mileage (must be done in JavaScript)
-    const oilChangeAlerts = oilChangeRecords.filter(maintenance => 
-      maintenance.vehicle.mileage >= maintenance.dueMileage
-    );
-
-    // Combine and sort all alerts
-    const alerts = [...dateBasedAlerts, ...oilChangeAlerts]
-      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-
+    const alerts = await MaintenanceService.getActiveAlerts();
     res.json(alerts);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,39 +1,12 @@
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Car, Calendar, CalendarDays, Users, Wrench, Settings as SettingsIcon, LogOut, Bell, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { planningAPI } from '../services/api';
+import { LayoutDashboard, Car, Calendar, CalendarDays, Users, Wrench, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import MaintenanceBell from '../components/MaintenanceBell';
 
 const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [alerts, setAlerts] = useState([]);
-
-  useEffect(() => {
-    loadAlerts();
-    const interval = setInterval(loadAlerts, 60000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadAlerts = async () => {
-    try {
-      const { data } = await planningAPI.getMaintenanceAlerts();
-      setAlerts(data || []);
-    } catch (error) {
-      console.error('Failed to load alerts:', error);
-    }
-  };
-
-  const getDaysUntilDue = (dueDate) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due - today;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const urgentAlerts = alerts.filter(alert => getDaysUntilDue(alert.dueDate) <= 7);
 
   const handleLogout = async () => {
     await logout();
@@ -105,71 +78,7 @@ const DashboardLayout = () => {
       </aside>
       <main className="flex-1 overflow-auto">
         <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-end items-center">
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <Bell className="w-6 h-6 text-gray-600" />
-              {urgentAlerts.length > 0 && (
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></span>
-              )}
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 opacity-0 animate-in" style={{ animation: 'fade-in 0.2s ease-out forwards, slide-in-from-top 0.2s ease-out forwards' }}>
-                <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                  <h3 className="font-semibold text-gray-800">Maintenance Alerts</h3>
-                  <button onClick={() => setShowNotifications(false)} className="p-1 hover:bg-gray-100 rounded">
-                    <X className="w-4 h-4 text-gray-500" />
-                  </button>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  {urgentAlerts.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500">
-                      <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                      <p>No urgent alerts</p>
-                    </div>
-                  ) : (
-                    urgentAlerts.map(alert => {
-                      const daysUntil = getDaysUntilDue(alert.dueDate);
-                      const isOverdue = daysUntil < 0;
-                      const typeLabel = alert.type === 'INSURANCE' ? 'Insurance' : alert.type === 'OIL_CHANGE' ? 'Oil Change' : 'Service';
-                      
-                      return (
-                        <div key={alert.id} className="p-4 border-b border-gray-100 hover:bg-gray-50 transition">
-                          <div className="flex items-start gap-3">
-                            <Car className={`w-5 h-5 mt-0.5 ${isOverdue ? 'text-red-600' : 'text-orange-600'}`} />
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-800">
-                                {alert.vehicle.brand} {alert.vehicle.model}
-                              </div>
-                              <div className="text-sm text-gray-600 mt-1">
-                                {typeLabel} - {alert.vehicle.licensePlate}
-                              </div>
-                              <div className={`text-xs mt-1 font-medium ${isOverdue ? 'text-red-600' : 'text-orange-600'}`}>
-                                {isOverdue ? `Overdue ${Math.abs(daysUntil)} days` : daysUntil === 0 ? 'Due today' : `Due in ${daysUntil} days`}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-                {urgentAlerts.length > 0 && (
-                  <div className="p-3 border-t border-gray-200">
-                    <button
-                      onClick={() => { setShowNotifications(false); navigate('/dashboard/maintenance'); }}
-                      className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      View All Alerts
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <MaintenanceBell />
         </div>
         <div className="p-8">
           <Outlet />

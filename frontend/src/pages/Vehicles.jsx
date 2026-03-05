@@ -121,7 +121,10 @@ const Vehicles = () => {
       formDataObj.append('category', editModal.category);
       formDataObj.append('dailyPrice', editModal.dailyPrice);
       formDataObj.append('deposit', editModal.deposit);
-      formDataObj.append('mileage', editModal.mileage);
+      formDataObj.append('currentMileage', editModal.currentMileage || editModal.mileage);
+      formDataObj.append('nextOilChangeMileage', editModal.nextOilChangeMileage || '');
+      formDataObj.append('nextServiceDate', editModal.nextServiceDate || editModal.nextService || '');
+      formDataObj.append('insuranceExpiryDate', editModal.insuranceExpiryDate || editModal.insuranceExpiry || '');
       if (editModal.year) formDataObj.append('year', editModal.year);
       if (editModal.color) formDataObj.append('color', editModal.color);
       if (editModal.seats) formDataObj.append('seats', editModal.seats);
@@ -145,7 +148,7 @@ const Vehicles = () => {
         insuranceId: editModal.insuranceId || null,
         insuranceExpiry: editModal.insuranceExpiry || '',
         oilChangeId: editModal.oilChangeId || null,
-        nextOilChange: editModal.nextOilChange || '',
+        nextOilChange: editModal.nextOilChangeMileage || editModal.nextOilChange || '',
         serviceId: editModal.serviceId || null,
         nextService: editModal.nextService || ''
       };
@@ -156,7 +159,15 @@ const Vehicles = () => {
       showToast('Vehicle updated successfully!', 'success');
       setEditModal(null);
       resetForm();
-      loadVehicles();
+      
+      // Force reload vehicles data to clear cache
+      setTimeout(() => {
+        loadVehicles();
+        // Also refresh maintenance alerts
+        if (window.refreshMaintenanceAlerts) {
+          window.refreshMaintenanceAlerts();
+        }
+      }, 500);
     } catch (error) {
       showToast(error.response?.data?.message || 'Failed to update vehicle', 'error');
     } finally {
@@ -192,7 +203,13 @@ const Vehicles = () => {
   };
 
   const handleEditClick = (vehicle) => {
-    setEditModal(vehicle);
+    setEditModal({
+      ...vehicle,
+      currentMileage: vehicle.currentMileage || vehicle.mileage,
+      nextOilChangeMileage: vehicle.nextOilChangeMileage,
+      nextServiceDate: vehicle.nextServiceDate,
+      insuranceExpiryDate: vehicle.insuranceExpiryDate
+    });
     setExistingImages(vehicle.vehicleimage || []);
     setImages([]);
     
@@ -201,15 +218,17 @@ const Vehicles = () => {
       const oilChange = vehicle.maintenance.find(m => m.type === 'OIL_CHANGE' && !m.isCompleted);
       const service = vehicle.maintenance.find(m => m.type === 'SERVICE' && !m.isCompleted);
       
-      setEditModal({
-        ...vehicle,
+      setEditModal(prev => ({
+        ...prev,
         insuranceId: insurance?.id || null,
-        insuranceExpiry: insurance ? new Date(insurance.dueDate).toISOString().split('T')[0] : '',
+        insuranceExpiry: insurance ? new Date(insurance.dueDate).toISOString().split('T')[0] : 
+                        (vehicle.insuranceExpiryDate ? new Date(vehicle.insuranceExpiryDate).toISOString().split('T')[0] : ''),
         oilChangeId: oilChange?.id || null,
-        nextOilChange: oilChange ? oilChange.dueMileage : '',
+        nextOilChange: oilChange ? oilChange.dueMileage : (vehicle.nextOilChangeMileage || ''),
         serviceId: service?.id || null,
-        nextService: service ? new Date(service.dueDate).toISOString().split('T')[0] : ''
-      });
+        nextService: service ? new Date(service.dueDate).toISOString().split('T')[0] : 
+                    (vehicle.nextServiceDate ? new Date(vehicle.nextServiceDate).toISOString().split('T')[0] : '')
+      }));
     }
   };
 
@@ -284,7 +303,7 @@ const Vehicles = () => {
                 </td>
                 <td className="px-6 py-4 text-xs text-gray-800">{vehicle.category}</td>
                 <td className="px-6 py-4 text-xs font-semibold text-blue-600">€{vehicle.dailyPrice.toFixed(2)}</td>
-                <td className="px-6 py-4 text-xs text-gray-800">{vehicle.mileage} km</td>
+                <td className="px-6 py-4 text-xs text-gray-800">{vehicle.currentMileage || vehicle.mileage} km</td>
                 <td className="px-6 py-4">
                   <div className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
                     vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
@@ -746,8 +765,9 @@ const Vehicles = () => {
                     <label className="block text-xs font-medium text-gray-700 mb-1">Current Mileage (km)</label>
                     <input
                       type="number"
-                      value={editModal.mileage}
-                      onChange={(e) => setEditModal({ ...editModal, mileage: e.target.value })}
+                      placeholder="Enter current mileage"
+                      value={editModal.currentMileage || editModal.mileage || ''}
+                      onChange={(e) => setEditModal({ ...editModal, currentMileage: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -758,21 +778,12 @@ const Vehicles = () => {
                 <h3 className="text-base font-semibold text-gray-800 mb-4">Maintenance & Alerts</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Insurance Expiry Date</label>
-                    <input
-                      type="date"
-                      value={editModal.insuranceExpiry || ''}
-                      onChange={(e) => setEditModal({ ...editModal, insuranceExpiry: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Next Oil Change (km)</label>
                     <input
                       type="number"
                       placeholder="25000"
-                      value={editModal.nextOilChange || ''}
-                      onChange={(e) => setEditModal({ ...editModal, nextOilChange: e.target.value })}
+                      value={editModal.nextOilChangeMileage || editModal.nextOilChange || ''}
+                      onChange={(e) => setEditModal({ ...editModal, nextOilChangeMileage: e.target.value, nextOilChange: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -780,8 +791,17 @@ const Vehicles = () => {
                     <label className="block text-xs font-medium text-gray-700 mb-1">Next Service Date</label>
                     <input
                       type="date"
-                      value={editModal.nextService || ''}
-                      onChange={(e) => setEditModal({ ...editModal, nextService: e.target.value })}
+                      value={editModal.nextServiceDate ? new Date(editModal.nextServiceDate).toISOString().split('T')[0] : editModal.nextService || ''}
+                      onChange={(e) => setEditModal({ ...editModal, nextServiceDate: e.target.value, nextService: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Insurance Expiry Date</label>
+                    <input
+                      type="date"
+                      value={editModal.insuranceExpiryDate ? new Date(editModal.insuranceExpiryDate).toISOString().split('T')[0] : editModal.insuranceExpiry || ''}
+                      onChange={(e) => setEditModal({ ...editModal, insuranceExpiryDate: e.target.value, insuranceExpiry: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>

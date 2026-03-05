@@ -46,6 +46,13 @@ export const reservationAPI = {
   checkOut: (id, formData) => api.post(`/reservations/${id}/checkout`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 };
 
+export const checkInOutAPI = {
+  createCheckOut: (reservationId) => api.post(`/checkinout/reservations/${reservationId}/checkout`),
+  createCheckIn: (reservationId, data) => api.post(`/checkinout/reservations/${reservationId}/checkin`, data),
+  getCheckInOut: (reservationId) => api.get(`/checkinout/reservations/${reservationId}/checkinout`),
+  updateCheckIn: (checkinId, data) => api.put(`/checkinout/checkin/${checkinId}`, data)
+};
+
 export const planningAPI = {
   getCalendar: (params) => api.get('/planning/calendar', { params }),
   getMaintenanceAlerts: () => api.get('/planning/maintenance')
@@ -53,7 +60,9 @@ export const planningAPI = {
 
 export const maintenanceAPI = {
   markComplete: (id) => api.put(`/maintenance/${id}/complete`),
-  update: (data) => api.put('/maintenance/update', data)
+  update: (data) => api.put('/maintenance/update', data),
+  getAlerts: () => api.get('/maintenance/alerts'),
+  updateSchedules: (vehicleId, data) => api.put(`/maintenance/vehicle/${vehicleId}/schedules`, data)
 };
 
 export default api;

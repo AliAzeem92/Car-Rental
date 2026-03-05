@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, Grid, X, Calendar, Plus, Eye, Edit } from 'lucide-react';
-import { reservationAPI, vehicleAPI, customerAPI } from '../services/api';
+import { reservationAPI, vehicleAPI, customerAPI, checkInOutAPI } from '../services/api';
 import StatusDropdown from '../components/StatusDropdown';
 import Modal from '../components/Modal';
+import CheckInModal from '../components/CheckInModal';
 import { RESERVATION_STATUS } from '../utils/constants';
 import { useToast } from '../context/ToastContext';
 
@@ -14,6 +15,7 @@ const Reservations = () => {
   const [showModal, setShowModal] = useState(false);
   const [viewModal, setViewModal] = useState(null);
   const [editModal, setEditModal] = useState(null);
+  const [checkInModal, setCheckInModal] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [vehicleFilter, setVehicleFilter] = useState('All Vehicles');
@@ -62,12 +64,31 @@ const Reservations = () => {
         await reservationAPI.updatePaymentStatus(id, status);
       } else {
         await reservationAPI.updateStatus(id, status);
+        
+        // If status is COMPLETED, show check-in modal
+        if (status === 'COMPLETED') {
+          const reservation = reservations.find(r => r.id === id);
+          if (reservation && !reservation.checkin) {
+            setCheckInModal(reservation);
+          }
+        }
       }
       loadData();
       showToast('Status updated successfully', 'success');
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to update status';
       showToast(message, 'error');
+    }
+  };
+
+  const handleCheckIn = async (formData) => {
+    try {
+      await checkInOutAPI.createCheckIn(checkInModal.id, formData);
+      showToast('Vehicle checked in successfully', 'success');
+      loadData();
+    } catch (error) {
+      showToast(error.response?.data?.error || 'Check-in failed', 'error');
+      throw error;
     }
   };
 
@@ -428,6 +449,13 @@ const Reservations = () => {
           </form>
         )}
       </Modal>
+
+      <CheckInModal
+        isOpen={!!checkInModal}
+        onClose={() => setCheckInModal(null)}
+        reservation={checkInModal}
+        onCheckIn={handleCheckIn}
+      />
     </div>
   );
 };
