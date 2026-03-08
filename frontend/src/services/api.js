@@ -26,7 +26,6 @@ export const vehicleAPI = {
   getOne: (id) => api.get(`/vehicles/${id}`),
   create: (formData) => api.post('/vehicles', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update: (id, data) => api.put(`/vehicles/${id}`, data, data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}),
-  delete: (id) => api.delete(`/vehicles/${id}`),
   getHistory: (id) => api.get(`/vehicles/${id}/history`)
 };
 
@@ -62,7 +61,9 @@ export const maintenanceAPI = {
   markComplete: (id) => api.put(`/maintenance/${id}/complete`),
   update: (data) => api.put('/maintenance/update', data),
   getAlerts: () => api.get('/maintenance/alerts'),
-  updateSchedules: (vehicleId, data) => api.put(`/maintenance/vehicle/${vehicleId}/schedules`, data)
+  updateSchedules: (vehicleId, data) => api.put(`/maintenance/vehicle/${vehicleId}/schedules`, data),
+  softDelete: (id) => api.delete(`/maintenance/${id}`),
+  restore: (id) => api.put(`/maintenance/${id}/restore`)
 };
 
 export default api;

@@ -21,7 +21,7 @@ const CustomerPortal = () => {
     try {
       const [profileRes, vehiclesRes, reservationsRes] = await Promise.all([
         axios.get('/api/auth/check', { withCredentials: true }),
-        axios.get('/api/vehicles', { withCredentials: true }),
+        axios.get('/api/vehicles?customerView=true', { withCredentials: true }),
         axios.get('/api/reservations', { withCredentials: true })
       ]);
       setCustomer(profileRes.data.user);

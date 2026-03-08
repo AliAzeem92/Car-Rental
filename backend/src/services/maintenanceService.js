@@ -9,20 +9,19 @@ export class MaintenanceService {
     const { insuranceExpiry, nextOilChange, nextService } = maintenanceData;
     const operations = [];
 
-    // Insurance maintenance
     if (insuranceExpiry && insuranceExpiry.trim() && insuranceExpiry !== '') {
       operations.push(
         prisma.maintenance.create({
           data: {
             vehicleId,
             type: 'INSURANCE',
-            dueDate: new Date(insuranceExpiry)
+            dueDate: new Date(insuranceExpiry),
+            isCompleted: false
           }
         })
       );
     }
 
-    // Oil change maintenance
     if (nextOilChange && String(nextOilChange).trim() !== '') {
       operations.push(
         prisma.maintenance.create({
@@ -30,20 +29,21 @@ export class MaintenanceService {
             vehicleId,
             type: 'OIL_CHANGE',
             dueDate: new Date(),
-            dueMileage: parseInt(nextOilChange)
+            dueMileage: parseInt(nextOilChange),
+            isCompleted: false
           }
         })
       );
     }
 
-    // Service maintenance
     if (nextService && nextService.trim() && nextService !== '') {
       operations.push(
         prisma.maintenance.create({
           data: {
             vehicleId,
             type: 'SERVICE',
-            dueDate: new Date(nextService)
+            dueDate: new Date(nextService),
+            isCompleted: false
           }
         })
       );
@@ -55,7 +55,7 @@ export class MaintenanceService {
   }
 
   /**
-   * Update maintenance records for a vehicle (used by both controllers)
+   * Update maintenance records for a vehicle (single source of truth)
    */
   static async updateMaintenanceForVehicle(vehicleId, updates) {
     const { 
@@ -73,7 +73,7 @@ export class MaintenanceService {
           operations.push(
             prisma.maintenance.update({
               where: { id: parseInt(insuranceId) },
-              data: { dueDate: new Date(insuranceExpiry) }
+              data: { dueDate: new Date(insuranceExpiry), isCompleted: false }
             })
           );
         } else {
@@ -82,7 +82,8 @@ export class MaintenanceService {
               data: { 
                 vehicleId: parseInt(vehicleId), 
                 type: 'INSURANCE', 
-                dueDate: new Date(insuranceExpiry) 
+                dueDate: new Date(insuranceExpiry),
+                isCompleted: false
               }
             })
           );
@@ -107,7 +108,8 @@ export class MaintenanceService {
               where: { id: parseInt(oilChangeId) },
               data: { 
                 dueMileage: oilKm,
-                dueDate: new Date()
+                dueDate: new Date(),
+                isCompleted: false
               }
             })
           );
@@ -118,7 +120,8 @@ export class MaintenanceService {
                 vehicleId: parseInt(vehicleId), 
                 type: 'OIL_CHANGE', 
                 dueDate: new Date(), 
-                dueMileage: oilKm 
+                dueMileage: oilKm,
+                isCompleted: false
               }
             })
           );
@@ -140,7 +143,7 @@ export class MaintenanceService {
           operations.push(
             prisma.maintenance.update({
               where: { id: parseInt(serviceId) },
-              data: { dueDate: new Date(nextService) }
+              data: { dueDate: new Date(nextService), isCompleted: false }
             })
           );
         } else {
@@ -149,7 +152,8 @@ export class MaintenanceService {
               data: { 
                 vehicleId: parseInt(vehicleId), 
                 type: 'SERVICE', 
-                dueDate: new Date(nextService) 
+                dueDate: new Date(nextService),
+                isCompleted: false
               }
             })
           );
@@ -158,129 +162,6 @@ export class MaintenanceService {
         operations.push(
           prisma.maintenance.update({
             where: { id: parseInt(serviceId) },
-            data: { isCompleted: true }
-          })
-        );
-      }
-    }
-
-    if (operations.length > 0) {
-      await prisma.$transaction(operations);
-    }
-  }
-
-  /**
-   * Update maintenance using upsert pattern for vehicle updates
-   */
-  static async upsertMaintenanceForVehicle(vehicleId, maintenanceData) {
-    const { insuranceExpiry, nextOilChange, nextService } = maintenanceData;
-    const operations = [];
-
-    // Insurance upsert
-    if (insuranceExpiry !== undefined) {
-      if (insuranceExpiry && insuranceExpiry.trim() && insuranceExpiry !== '') {
-        operations.push(
-          prisma.maintenance.upsert({
-            where: {
-              vehicleId_type: {
-                vehicleId: parseInt(vehicleId),
-                type: 'INSURANCE'
-              }
-            },
-            update: {
-              dueDate: new Date(insuranceExpiry),
-              isCompleted: false
-            },
-            create: {
-              vehicleId: parseInt(vehicleId),
-              type: 'INSURANCE',
-              dueDate: new Date(insuranceExpiry)
-            }
-          })
-        );
-      } else {
-        // Mark as completed if exists
-        operations.push(
-          prisma.maintenance.updateMany({
-            where: { 
-              vehicleId: parseInt(vehicleId), 
-              type: 'INSURANCE',
-              isCompleted: false
-            },
-            data: { isCompleted: true }
-          })
-        );
-      }
-    }
-
-    // Oil change upsert
-    if (nextOilChange !== undefined) {
-      if (nextOilChange && String(nextOilChange).trim() !== '') {
-        operations.push(
-          prisma.maintenance.upsert({
-            where: {
-              vehicleId_type: {
-                vehicleId: parseInt(vehicleId),
-                type: 'OIL_CHANGE'
-              }
-            },
-            update: {
-              dueMileage: parseInt(nextOilChange),
-              dueDate: new Date(),
-              isCompleted: false
-            },
-            create: {
-              vehicleId: parseInt(vehicleId),
-              type: 'OIL_CHANGE',
-              dueDate: new Date(),
-              dueMileage: parseInt(nextOilChange)
-            }
-          })
-        );
-      } else {
-        operations.push(
-          prisma.maintenance.updateMany({
-            where: { 
-              vehicleId: parseInt(vehicleId), 
-              type: 'OIL_CHANGE',
-              isCompleted: false
-            },
-            data: { isCompleted: true }
-          })
-        );
-      }
-    }
-
-    // Service upsert
-    if (nextService !== undefined) {
-      if (nextService && nextService.trim() && nextService !== '') {
-        operations.push(
-          prisma.maintenance.upsert({
-            where: {
-              vehicleId_type: {
-                vehicleId: parseInt(vehicleId),
-                type: 'SERVICE'
-              }
-            },
-            update: {
-              dueDate: new Date(nextService),
-              isCompleted: false
-            },
-            create: {
-              vehicleId: parseInt(vehicleId),
-              type: 'SERVICE',
-              dueDate: new Date(nextService)
-            }
-          })
-        );
-      } else {
-        operations.push(
-          prisma.maintenance.updateMany({
-            where: { 
-              vehicleId: parseInt(vehicleId), 
-              type: 'SERVICE',
-              isCompleted: false
-            },
             data: { isCompleted: true }
           })
         );
@@ -317,68 +198,47 @@ export class MaintenanceService {
   }
 
   /**
-   * Get active maintenance alerts with proper filtering
+   * Get active maintenance alerts (SINGLE SOURCE OF TRUTH)
    */
   static async getActiveAlerts() {
     const currentDate = new Date();
     
-    // Get all vehicles with their maintenance records
+    // Get all vehicles with current mileage
     const vehicles = await prisma.vehicle.findMany({
-      include: {
-        maintenance: {
-          where: { isCompleted: false }
-        }
+      select: {
+        id: true,
+        brand: true,
+        model: true,
+        licensePlate: true,
+        currentMileage: true
       }
+    });
+
+    // Get all active maintenance records
+    const maintenanceRecords = await prisma.maintenance.findMany({
+      where: { isCompleted: false },
+      include: { vehicle: true }
     });
 
     const alerts = [];
 
-    for (const vehicle of vehicles) {
-      // Check oil change based on current mileage vs nextOilChangeMileage
-      if (vehicle.nextOilChangeMileage && vehicle.currentMileage >= vehicle.nextOilChangeMileage) {
-        // Find or create oil change maintenance record
-        let oilMaintenance = vehicle.maintenance.find(m => m.type === 'OIL_CHANGE');
-        if (!oilMaintenance) {
-          oilMaintenance = await prisma.maintenance.create({
-            data: {
-              vehicleId: vehicle.id,
-              type: 'OIL_CHANGE',
-              dueDate: new Date(),
-              dueMileage: vehicle.nextOilChangeMileage
-            }
-          });
+    for (const maintenance of maintenanceRecords) {
+      let isOverdue = false;
+
+      if (maintenance.type === 'OIL_CHANGE') {
+        // Check if current mileage >= due mileage
+        if (maintenance.dueMileage && maintenance.vehicle.currentMileage >= maintenance.dueMileage) {
+          isOverdue = true;
         }
-        alerts.push({ ...oilMaintenance, vehicle });
+      } else {
+        // Check if current date >= due date
+        if (maintenance.dueDate <= currentDate) {
+          isOverdue = true;
+        }
       }
 
-      // Check service date
-      if (vehicle.nextServiceDate && vehicle.nextServiceDate <= currentDate) {
-        let serviceMaintenance = vehicle.maintenance.find(m => m.type === 'SERVICE');
-        if (!serviceMaintenance) {
-          serviceMaintenance = await prisma.maintenance.create({
-            data: {
-              vehicleId: vehicle.id,
-              type: 'SERVICE',
-              dueDate: vehicle.nextServiceDate
-            }
-          });
-        }
-        alerts.push({ ...serviceMaintenance, vehicle });
-      }
-
-      // Check insurance expiry
-      if (vehicle.insuranceExpiryDate && vehicle.insuranceExpiryDate <= currentDate) {
-        let insuranceMaintenance = vehicle.maintenance.find(m => m.type === 'INSURANCE');
-        if (!insuranceMaintenance) {
-          insuranceMaintenance = await prisma.maintenance.create({
-            data: {
-              vehicleId: vehicle.id,
-              type: 'INSURANCE',
-              dueDate: vehicle.insuranceExpiryDate
-            }
-          });
-        }
-        alerts.push({ ...insuranceMaintenance, vehicle });
+      if (isOverdue) {
+        alerts.push(maintenance);
       }
     }
 
@@ -386,161 +246,156 @@ export class MaintenanceService {
   }
 
   /**
-   * Update maintenance schedules and generate alerts
-   */
-  static async updateMaintenanceSchedules(vehicleId, data) {
-    const { nextOilChangeMileage, nextServiceDate, insuranceExpiryDate } = data;
-    const operations = [];
-
-    // Update vehicle fields
-    const vehicleUpdate = {};
-    if (nextOilChangeMileage !== undefined) vehicleUpdate.nextOilChangeMileage = nextOilChangeMileage ? parseInt(nextOilChangeMileage) : null;
-    if (nextServiceDate !== undefined) vehicleUpdate.nextServiceDate = nextServiceDate ? new Date(nextServiceDate) : null;
-    if (insuranceExpiryDate !== undefined) vehicleUpdate.insuranceExpiryDate = insuranceExpiryDate ? new Date(insuranceExpiryDate) : null;
-
-    if (Object.keys(vehicleUpdate).length > 0) {
-      operations.push(
-        prisma.vehicle.update({
-          where: { id: parseInt(vehicleId) },
-          data: vehicleUpdate
-        })
-      );
-    }
-
-    // Mark existing maintenance as complete
-    operations.push(
-      prisma.maintenance.updateMany({
-        where: { vehicleId: parseInt(vehicleId), isCompleted: false },
-        data: { isCompleted: true }
-      })
-    );
-
-    // Create new maintenance records
-    if (nextOilChangeMileage) {
-      operations.push(
-        prisma.maintenance.create({
-          data: {
-            vehicleId: parseInt(vehicleId),
-            type: 'OIL_CHANGE',
-            dueDate: new Date(),
-            dueMileage: parseInt(nextOilChangeMileage)
-          }
-        })
-      );
-    }
-
-    if (nextServiceDate) {
-      operations.push(
-        prisma.maintenance.create({
-          data: {
-            vehicleId: parseInt(vehicleId),
-            type: 'SERVICE',
-            dueDate: new Date(nextServiceDate)
-          }
-        })
-      );
-    }
-
-    if (insuranceExpiryDate) {
-      operations.push(
-        prisma.maintenance.create({
-          data: {
-            vehicleId: parseInt(vehicleId),
-            type: 'INSURANCE',
-            dueDate: new Date(insuranceExpiryDate)
-          }
-        })
-      );
-    }
-
-    await prisma.$transaction(operations);
-    return { success: true, message: 'Maintenance schedules updated successfully' };
-  }
-
-  /**
-   * Generate alerts for a specific vehicle
+   * Generate alerts for a specific vehicle (SINGLE SOURCE OF TRUTH)
    */
   static async generateAlertsForVehicle(vehicleId) {
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
-      include: {
-        maintenance: {
-          where: { isCompleted: false }
-        }
-      }
+      select: { id: true, currentMileage: true }
     });
 
     if (!vehicle) return;
 
     const currentDate = new Date();
-    const operations = [];
 
-    // Check oil change based on current mileage vs nextOilChangeMileage
-    if (vehicle.nextOilChangeMileage && vehicle.currentMileage >= vehicle.nextOilChangeMileage) {
-      const existingOilAlert = vehicle.maintenance.find(m => m.type === 'OIL_CHANGE');
-      if (!existingOilAlert) {
-        operations.push(
-          prisma.maintenance.create({
-            data: {
-              vehicleId: vehicle.id,
-              type: 'OIL_CHANGE',
-              dueDate: new Date(),
-              dueMileage: vehicle.nextOilChangeMileage
-            }
-          })
-        );
+    // Get active maintenance records for this vehicle
+    const maintenanceRecords = await prisma.maintenance.findMany({
+      where: {
+        vehicleId: vehicleId,
+        isCompleted: false
       }
+    });
+
+    // Check oil change based on current mileage
+    const oilChange = maintenanceRecords.find(m => m.type === 'OIL_CHANGE');
+    if (oilChange && oilChange.dueMileage && vehicle.currentMileage >= oilChange.dueMileage) {
+      // Alert already exists, no action needed
+      console.log(`Oil change alert active for vehicle ${vehicleId}`);
     }
 
     // Check service date
-    if (vehicle.nextServiceDate && vehicle.nextServiceDate <= currentDate) {
-      const existingServiceAlert = vehicle.maintenance.find(m => m.type === 'SERVICE');
-      if (!existingServiceAlert) {
-        operations.push(
-          prisma.maintenance.create({
-            data: {
-              vehicleId: vehicle.id,
-              type: 'SERVICE',
-              dueDate: vehicle.nextServiceDate
-            }
-          })
-        );
-      }
+    const service = maintenanceRecords.find(m => m.type === 'SERVICE');
+    if (service && service.dueDate <= currentDate) {
+      console.log(`Service alert active for vehicle ${vehicleId}`);
     }
 
     // Check insurance expiry
-    if (vehicle.insuranceExpiryDate && vehicle.insuranceExpiryDate <= currentDate) {
-      const existingInsuranceAlert = vehicle.maintenance.find(m => m.type === 'INSURANCE');
-      if (!existingInsuranceAlert) {
+    const insurance = maintenanceRecords.find(m => m.type === 'INSURANCE');
+    if (insurance && insurance.dueDate <= currentDate) {
+      console.log(`Insurance alert active for vehicle ${vehicleId}`);
+    }
+  }
+
+  /**
+   * Update maintenance schedules
+   */
+  static async updateMaintenanceSchedules(vehicleId, data) {
+    const { nextOilChangeMileage, nextServiceDate, insuranceExpiryDate } = data;
+    
+    // Get existing active maintenance records
+    const existing = await prisma.maintenance.findMany({
+      where: { vehicleId: parseInt(vehicleId), isCompleted: false, isDeleted: false }
+    });
+
+    const operations = [];
+
+    // Handle OIL_CHANGE
+    const existingOil = existing.find(m => m.type === 'OIL_CHANGE');
+    if (nextOilChangeMileage) {
+      if (existingOil) {
+        operations.push(
+          prisma.maintenance.update({
+            where: { id: existingOil.id },
+            data: { dueMileage: parseInt(nextOilChangeMileage), dueDate: new Date() }
+          })
+        );
+      } else {
         operations.push(
           prisma.maintenance.create({
             data: {
-              vehicleId: vehicle.id,
-              type: 'INSURANCE',
-              dueDate: vehicle.insuranceExpiryDate
+              vehicleId: parseInt(vehicleId),
+              type: 'OIL_CHANGE',
+              dueDate: new Date(),
+              dueMileage: parseInt(nextOilChangeMileage),
+              isCompleted: false
             }
           })
         );
       }
+    } else if (existingOil) {
+      operations.push(
+        prisma.maintenance.update({
+          where: { id: existingOil.id },
+          data: { isCompleted: true }
+        })
+      );
+    }
+
+    // Handle SERVICE
+    const existingService = existing.find(m => m.type === 'SERVICE');
+    if (nextServiceDate) {
+      if (existingService) {
+        operations.push(
+          prisma.maintenance.update({
+            where: { id: existingService.id },
+            data: { dueDate: new Date(nextServiceDate) }
+          })
+        );
+      } else {
+        operations.push(
+          prisma.maintenance.create({
+            data: {
+              vehicleId: parseInt(vehicleId),
+              type: 'SERVICE',
+              dueDate: new Date(nextServiceDate),
+              isCompleted: false
+            }
+          })
+        );
+      }
+    } else if (existingService) {
+      operations.push(
+        prisma.maintenance.update({
+          where: { id: existingService.id },
+          data: { isCompleted: true }
+        })
+      );
+    }
+
+    // Handle INSURANCE
+    const existingInsurance = existing.find(m => m.type === 'INSURANCE');
+    if (insuranceExpiryDate) {
+      if (existingInsurance) {
+        operations.push(
+          prisma.maintenance.update({
+            where: { id: existingInsurance.id },
+            data: { dueDate: new Date(insuranceExpiryDate) }
+          })
+        );
+      } else {
+        operations.push(
+          prisma.maintenance.create({
+            data: {
+              vehicleId: parseInt(vehicleId),
+              type: 'INSURANCE',
+              dueDate: new Date(insuranceExpiryDate),
+              isCompleted: false
+            }
+          })
+        );
+      }
+    } else if (existingInsurance) {
+      operations.push(
+        prisma.maintenance.update({
+          where: { id: existingInsurance.id },
+          data: { isCompleted: true }
+        })
+      );
     }
 
     if (operations.length > 0) {
       await prisma.$transaction(operations);
     }
-  }
-
-  /**
-   * Validate maintenance data
-   */
-  static validateMaintenanceData(type, data) {
-    if (type === 'OIL_CHANGE') {
-      if (!data.dueMileage || data.dueMileage <= 0) {
-        throw new Error('Oil change requires valid dueMileage');
-      }
-    } else {
-      if (!data.dueDate) {
-        throw new Error(`${type} requires dueDate`);
-      }
-    }
+    return { success: true, message: 'Maintenance schedules updated successfully' };
   }
 }

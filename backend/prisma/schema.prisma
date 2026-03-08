@@ -82,9 +82,13 @@ model maintenance {
   dueDate     DateTime
   dueMileage  Int?
   isCompleted Boolean          @default(false)
+  isDeleted   Boolean          @default(false)
+  completedAt DateTime?
+  deletedAt   DateTime?
   vehicle     vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@index([vehicleId])
+  @@index([isDeleted])
 }
 
 model reservation {
@@ -157,10 +161,8 @@ model vehicle {
   dailyPrice            Float
   deposit               Float
   currentMileage        Int            @default(0)
-  nextOilChangeMileage  Int?
-  nextServiceDate       DateTime?
-  insuranceExpiryDate   DateTime?
   status                vehicle_status @default(AVAILABLE)
+  isAvailable           Boolean        @default(true)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
   maintenance           maintenance[]

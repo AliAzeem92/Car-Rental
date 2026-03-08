@@ -57,3 +57,29 @@ export const getAlerts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const softDelete = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.maintenance.update({
+      where: { id: parseInt(id) },
+      data: { isDeleted: true, deletedAt: new Date() }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const restore = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.maintenance.update({
+      where: { id: parseInt(id) },
+      data: { isDeleted: false, deletedAt: null }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

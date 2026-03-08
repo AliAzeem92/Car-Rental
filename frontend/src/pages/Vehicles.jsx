@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit } from 'lucide-react';
 import { vehicleAPI, maintenanceAPI } from '../services/api';
 import StatusDropdown from '../components/StatusDropdown';
 import Dropdown from '../components/Dropdown';
@@ -27,6 +27,11 @@ const statusOptions = [
   { value: 'RESERVED', label: 'Reserved', color: 'bg-yellow-500' },
   { value: 'RENTED', label: 'Rented', color: 'bg-blue-500' },
   { value: 'MAINTENANCE', label: 'Maintenance', color: 'bg-red-500' }
+];
+
+const availabilityOptions = [
+  { value: true, label: 'Available', color: 'bg-green-500' },
+  { value: false, label: 'Un-Available', color: 'bg-gray-500' }
 ];
 
 const Vehicles = () => {
@@ -71,7 +76,6 @@ const Vehicles = () => {
     setLoading(true);
     try {
       const formDataObj = new FormData();
-      // Only vehicle fields
       const vehicleFields = ['brand', 'model', 'year', 'licensePlate', 'category', 'color', 'seats', 'transmission', 'fuelType', 'status', 'description', 'features', 'dailyPrice', 'deposit', 'mileage'];
       vehicleFields.forEach(key => {
         if (formData[key]) formDataObj.append(key, formData[key]);
@@ -84,7 +88,7 @@ const Vehicles = () => {
 
       const { data: vehicle } = await vehicleAPI.create(formDataObj);
       
-      // Create maintenance if provided
+      // Create maintenance records separately
       if (formData.insuranceExpiry || formData.nextOilChange || formData.nextService) {
         await maintenanceAPI.update({
           vehicleId: vehicle.id,
@@ -113,7 +117,7 @@ const Vehicles = () => {
     }
     setLoading(true);
     try {
-      // Vehicle payload
+      // Vehicle payload - only vehicle data
       const formDataObj = new FormData();
       formDataObj.append('brand', editModal.brand);
       formDataObj.append('model', editModal.model);
@@ -122,9 +126,7 @@ const Vehicles = () => {
       formDataObj.append('dailyPrice', editModal.dailyPrice);
       formDataObj.append('deposit', editModal.deposit);
       formDataObj.append('currentMileage', editModal.currentMileage || editModal.mileage);
-      formDataObj.append('nextOilChangeMileage', editModal.nextOilChangeMileage || '');
-      formDataObj.append('nextServiceDate', editModal.nextServiceDate || editModal.nextService || '');
-      formDataObj.append('insuranceExpiryDate', editModal.insuranceExpiryDate || editModal.insuranceExpiry || '');
+      formDataObj.append('isAvailable', editModal.isAvailable);
       if (editModal.year) formDataObj.append('year', editModal.year);
       if (editModal.color) formDataObj.append('color', editModal.color);
       if (editModal.seats) formDataObj.append('seats', editModal.seats);
@@ -142,13 +144,13 @@ const Vehicles = () => {
       // Update vehicle
       await vehicleAPI.update(editModal.id, formDataObj);
       
-      // Maintenance payload
+      // Maintenance payload - separate API call
       const maintenancePayload = {
         vehicleId: editModal.id,
         insuranceId: editModal.insuranceId || null,
         insuranceExpiry: editModal.insuranceExpiry || '',
         oilChangeId: editModal.oilChangeId || null,
-        nextOilChange: editModal.nextOilChangeMileage || editModal.nextOilChange || '',
+        nextOilChange: editModal.nextOilChange || '',
         serviceId: editModal.serviceId || null,
         nextService: editModal.nextService || ''
       };
@@ -160,10 +162,8 @@ const Vehicles = () => {
       setEditModal(null);
       resetForm();
       
-      // Force reload vehicles data to clear cache
       setTimeout(() => {
         loadVehicles();
-        // Also refresh maintenance alerts
         if (window.refreshMaintenanceAlerts) {
           window.refreshMaintenanceAlerts();
         }
@@ -172,17 +172,6 @@ const Vehicles = () => {
       showToast(error.response?.data?.message || 'Failed to update vehicle', 'error');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this vehicle?')) return;
-    try {
-      await vehicleAPI.delete(id);
-      showToast('Vehicle deleted successfully', 'success');
-      loadVehicles();
-    } catch (error) {
-      showToast('Failed to delete vehicle', 'error');
     }
   };
 
@@ -206,9 +195,7 @@ const Vehicles = () => {
     setEditModal({
       ...vehicle,
       currentMileage: vehicle.currentMileage || vehicle.mileage,
-      nextOilChangeMileage: vehicle.nextOilChangeMileage,
-      nextServiceDate: vehicle.nextServiceDate,
-      insuranceExpiryDate: vehicle.insuranceExpiryDate
+      isAvailable: vehicle.isAvailable ?? true
     });
     setExistingImages(vehicle.vehicleimage || []);
     setImages([]);
@@ -221,13 +208,11 @@ const Vehicles = () => {
       setEditModal(prev => ({
         ...prev,
         insuranceId: insurance?.id || null,
-        insuranceExpiry: insurance ? new Date(insurance.dueDate).toISOString().split('T')[0] : 
-                        (vehicle.insuranceExpiryDate ? new Date(vehicle.insuranceExpiryDate).toISOString().split('T')[0] : ''),
+        insuranceExpiry: insurance ? new Date(insurance.dueDate).toISOString().split('T')[0] : '',
         oilChangeId: oilChange?.id || null,
-        nextOilChange: oilChange ? oilChange.dueMileage : (vehicle.nextOilChangeMileage || ''),
+        nextOilChange: oilChange?.dueMileage || '',
         serviceId: service?.id || null,
-        nextService: service ? new Date(service.dueDate).toISOString().split('T')[0] : 
-                    (vehicle.nextServiceDate ? new Date(vehicle.nextServiceDate).toISOString().split('T')[0] : '')
+        nextService: service ? new Date(service.dueDate).toISOString().split('T')[0] : ''
       }));
     }
   };
@@ -280,7 +265,7 @@ const Vehicles = () => {
             isAnimating ? 'opacity-0' : 'opacity-100'
           }`}>
             {paginatedVehicles.map(vehicle => (
-              <tr key={vehicle.id} className="hover:bg-gray-50 transition">
+              <tr key={vehicle.id} className={`hover:bg-gray-50 transition ${!vehicle.isAvailable ? 'opacity-50 bg-gray-300 ' : ''}`}>
                 <td className="px-6 py-4">
                   <div className="w-20 h-16 bg-gray-200 rounded-lg overflow-hidden shadow-sm">
                     {vehicle.vehicleimage?.[0] ? (
@@ -306,21 +291,19 @@ const Vehicles = () => {
                 <td className="px-6 py-4 text-xs text-gray-800">{vehicle.currentMileage || vehicle.mileage} km</td>
                 <td className="px-6 py-4">
                   <div className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
+                    !vehicle.isAvailable ? 'bg-gray-100 text-gray-700' :
                     vehicle.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' :
                     vehicle.status === 'RESERVED' ? 'bg-yellow-100 text-yellow-700' :
                     vehicle.status === 'RENTED' ? 'bg-blue-100 text-blue-700' :
                     'bg-red-100 text-red-700'
                   }`}>
-                    {vehicle.status}
+                    {!vehicle.isAvailable ? 'UNAVAILABLE' : vehicle.status}
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <button onClick={() => handleEditClick(vehicle)} className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition">
                       <Edit className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(vehicle.id)} className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition">
-                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -718,6 +701,16 @@ const Vehicles = () => {
                       width="w-full"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Availability</label>
+                    <Dropdown
+                      value={editModal.isAvailable}
+                      onChange={(value) => setEditModal({ ...editModal, isAvailable: value })}
+                      options={availabilityOptions}
+                      showColor={true}
+                      width="w-full"
+                    />
+                  </div>
                 </div>
                 <div className="mt-3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
@@ -782,8 +775,8 @@ const Vehicles = () => {
                     <input
                       type="number"
                       placeholder="25000"
-                      value={editModal.nextOilChangeMileage || editModal.nextOilChange || ''}
-                      onChange={(e) => setEditModal({ ...editModal, nextOilChangeMileage: e.target.value, nextOilChange: e.target.value })}
+                      value={editModal.nextOilChange || ''}
+                      onChange={(e) => setEditModal({ ...editModal, nextOilChange: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -791,8 +784,8 @@ const Vehicles = () => {
                     <label className="block text-xs font-medium text-gray-700 mb-1">Next Service Date</label>
                     <input
                       type="date"
-                      value={editModal.nextServiceDate ? new Date(editModal.nextServiceDate).toISOString().split('T')[0] : editModal.nextService || ''}
-                      onChange={(e) => setEditModal({ ...editModal, nextServiceDate: e.target.value, nextService: e.target.value })}
+                      value={editModal.nextService || ''}
+                      onChange={(e) => setEditModal({ ...editModal, nextService: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -800,8 +793,8 @@ const Vehicles = () => {
                     <label className="block text-xs font-medium text-gray-700 mb-1">Insurance Expiry Date</label>
                     <input
                       type="date"
-                      value={editModal.insuranceExpiryDate ? new Date(editModal.insuranceExpiryDate).toISOString().split('T')[0] : editModal.insuranceExpiry || ''}
-                      onChange={(e) => setEditModal({ ...editModal, insuranceExpiryDate: e.target.value, insuranceExpiry: e.target.value })}
+                      value={editModal.insuranceExpiry || ''}
+                      onChange={(e) => setEditModal({ ...editModal, insuranceExpiry: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>

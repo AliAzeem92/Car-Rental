@@ -126,40 +126,19 @@ export class CheckInOutService {
 
       // Update vehicle mileage if changed
       if (mileageIn) {
-        const updatedVehicle = await tx.vehicle.update({
+        await tx.vehicle.update({
           where: { id: checkin.reservation.vehicleId },
           data: { currentMileage: parseInt(mileageIn) }
         });
-
-        // Check for oil change alert
-        if (updatedVehicle.nextOilChangeMileage && 
-            updatedVehicle.currentMileage >= updatedVehicle.nextOilChangeMileage) {
-          
-          const existingAlert = await tx.maintenance.findFirst({
-            where: {
-              vehicleId: checkin.reservation.vehicleId,
-              type: 'OIL_CHANGE',
-              isCompleted: false,
-              dueMileage: updatedVehicle.nextOilChangeMileage
-            }
-          });
-
-          if (!existingAlert) {
-            await tx.maintenance.create({
-              data: {
-                vehicleId: checkin.reservation.vehicleId,
-                type: 'OIL_CHANGE',
-                dueDate: new Date(),
-                dueMileage: updatedVehicle.nextOilChangeMileage,
-                isCompleted: false
-              }
-            });
-          }
-        }
       }
 
       return updatedCheckin;
     });
+
+    // Generate alerts after mileage update
+    if (mileageIn) {
+      await this.checkMaintenanceAlerts(checkin.reservation.vehicleId);
+    }
 
     return result;
   }

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { MaintenanceProvider } from './context/MaintenanceContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import Login from './pages/Login';
@@ -20,36 +21,38 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ToastProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route 
-            path="/customer/portal" 
-            element={
-              <ProtectedRoute requiredRole="CUSTOMER">
-                <CustomerPortal />
-              </ProtectedRoute>
-            } 
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="vehicles" element={<Vehicles />} />
-            <Route path="reservations" element={<Reservations />} />
-            <Route path="planning" element={<Planning />} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="maintenance" element={<Maintenance />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
+          <MaintenanceProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route 
+                path="/customer/portal" 
+                element={
+                  <ProtectedRoute requiredRole="CUSTOMER">
+                    <CustomerPortal />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="vehicles" element={<Vehicles />} />
+                <Route path="reservations" element={<Reservations />} />
+                <Route path="planning" element={<Planning />} />
+                <Route path="customers" element={<Customers />} />
+                <Route path="maintenance" element={<Maintenance />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </MaintenanceProvider>
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
