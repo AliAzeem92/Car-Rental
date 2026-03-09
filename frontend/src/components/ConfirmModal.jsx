@@ -1,12 +1,21 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from "lucide-react";
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', cancelText = 'Cancel', variant = 'danger' }) => {
+const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+  variant = "danger",
+}) => {
   if (!isOpen) return null;
 
   const variantStyles = {
-    danger: 'bg-red-600 hover:bg-red-700',
-    success: 'bg-green-600 hover:bg-green-700',
-    warning: 'bg-yellow-600 hover:bg-yellow-700'
+    danger: "bg-red-600 hover:bg-red-700",
+    success: "bg-green-600 hover:bg-green-700",
+    warning: "bg-yellow-600 hover:bg-yellow-700",
   };
 
   return (

@@ -23,6 +23,9 @@ export const authAPI = {
 
 export const vehicleAPI = {
   getAll: (params) => api.get('/vehicles', { params }),
+  getAvailable: (pickupDate, returnDate) => api.get('/vehicles/available', { 
+    params: { pickup: pickupDate, return: returnDate } 
+  }),
   getOne: (id) => api.get(`/vehicles/${id}`),
   create: (formData) => api.post('/vehicles', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update: (id, data) => api.put(`/vehicles/${id}`, data, data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {}),
@@ -38,6 +41,7 @@ export const customerAPI = {
 
 export const reservationAPI = {
   getAll: (params) => api.get('/reservations', { params }),
+  getCustomerReservations: () => api.get('/reservations/customer'),
   create: (data) => api.post('/reservations', data),
   updateStatus: (id, status) => api.put(`/reservations/${id}/status`, { status }),
   updatePaymentStatus: (id, paymentStatus) => api.put(`/reservations/${id}/payment-status`, { paymentStatus }),
