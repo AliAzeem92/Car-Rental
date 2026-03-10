@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
+import customerAuthRoutes from './routes/customerAuthRoutes.js';
 import vehicleRoutes from './routes/vehicleRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
 import reservationRoutes from './routes/reservationRoutes.js';
@@ -40,6 +41,7 @@ app.use(cookieParser());
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/customer/auth', customerAuthRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/reservations', reservationRoutes);

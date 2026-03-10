@@ -21,9 +21,9 @@ const Login = () => {
       const response = await login({ email, password });
       
       if (response.user.role === 'ADMIN') {
-        navigate('/dashboard');
+        navigate('/admin/dashboard');
       } else {
-        navigate('/customer/portal');
+        navigate('/');
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
@@ -107,16 +107,10 @@ const Login = () => {
 
         <div className="mt-6 text-center space-y-2">
           <button
-            onClick={() => navigate('/forgot-password')}
+            onClick={() => navigate('/')}
             className="text-gray-600 hover:text-gray-800 text-sm font-medium hover:underline transition-colors block w-full"
           >
-            Forgot your password?
-          </button>
-          <button
-            onClick={() => navigate('/register')}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline transition-colors"
-          >
-            Don't have an account? Create one
+            Back to Home
           </button>
         </div>
 

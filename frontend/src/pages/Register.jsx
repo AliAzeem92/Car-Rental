@@ -119,7 +119,7 @@ const Register = () => {
 
         <div className="mt-4 text-center">
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/admin/login')}
             className="text-blue-600 hover:underline text-sm"
           >
             Already have an account? Login

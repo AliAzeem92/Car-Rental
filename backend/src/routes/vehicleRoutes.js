@@ -5,8 +5,11 @@ import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
-router.get('/', authenticate, getVehicles);
-router.get('/:id', authenticate, getVehicle);
+// Public routes - no authentication required
+router.get('/', getVehicles);
+router.get('/:id', getVehicle);
+
+// Admin protected routes
 router.post('/', authenticate, requireAdmin, upload.array('images', 5), createVehicle);
 router.put('/:id', authenticate, requireAdmin, upload.array('images', 5), updateVehicle);
 router.get('/:id/history', authenticate, requireAdmin, getVehicleHistory);

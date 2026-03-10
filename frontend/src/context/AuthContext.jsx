@@ -17,9 +17,27 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
-      const { data } = await authAPI.checkAuth();
-      setUser(data.user);
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      
+      if (token && savedUser) {
+        // Validate token with server
+        try {
+          const { data } = await authAPI.checkAuth();
+          setUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        } catch (error) {
+          // Token is invalid, clear storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
     } catch (error) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null);
     }
     setLoading(false);
@@ -28,16 +46,24 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     const { data } = await authAPI.login(credentials);
     setUser(data.user);
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
     return data;
   };
 
   const logout = async () => {
-    await authAPI.logout();
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      // Continue with logout even if API call fails
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, admin: user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

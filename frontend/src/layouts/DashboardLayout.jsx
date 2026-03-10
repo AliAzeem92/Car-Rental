@@ -14,13 +14,12 @@ const DashboardLayout = () => {
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/dashboard/vehicles', label: 'Vehicles', icon: Car },
-    { path: '/dashboard/reservations', label: 'Reservations', icon: Calendar },
-    { path: '/dashboard/planning', label: 'Planning', icon: CalendarDays },
-    { path: '/dashboard/customers', label: 'Customers', icon: Users },
-    { path: '/dashboard/maintenance', label: 'Maintenance', icon: Wrench },
-    { path: '/dashboard/settings', label: 'Settings', icon: SettingsIcon }
+    { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/admin/cars', label: 'Vehicles', icon: Car },
+    { path: '/admin/bookings', label: 'Reservations', icon: Calendar },
+    { path: '/admin/customers', label: 'Customers', icon: Users },
+    { path: '/admin/maintenance', label: 'Maintenance', icon: Wrench },
+    { path: '/admin/settings', label: 'Settings', icon: SettingsIcon }
   ];
 
   return (

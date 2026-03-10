@@ -1,17 +1,39 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Car } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, Car, LogOut } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Our Cars", path: "/cars" },
-    { name: "Reservations", path: "/reservations" },
-    { name: "About", path: "/about" },
-  ];
+  const isAuthenticated = !!user;
+  const userRole = user?.role;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+    setIsOpen(false);
+  };
+
+  // Define navigation items based on authentication state
+  const getNavItems = () => {
+    const baseItems = [
+      { name: "Home", path: "/" },
+      { name: "Our Cars", path: "/cars" },
+    ];
+
+    if (isAuthenticated && userRole === "CUSTOMER") {
+      baseItems.push({ name: "Reservations", path: "/reservations" });
+    }
+
+    baseItems.push({ name: "About", path: "/about" });
+    return baseItems;
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="bg-[#192336] text-white sticky top-0 z-50 shadow-lg">
@@ -24,20 +46,40 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === item.path
-                    ? "text-[#d9b15c] bg-[#004aad]/20 border-b border-[#d9b15c] "
-                    : "text-white hover:text-[#d9b15c] hover:bg-[#004aad]/10"
-                }`}
+          <div className="hidden md:flex items-center space-x-8">
+            <div className="flex space-x-8">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    location.pathname === item.path
+                      ? "text-[#d9b15c] bg-[#004aad]/20 border-b border-[#d9b15c] "
+                      : "text-white hover:text-[#d9b15c] hover:bg-[#004aad]/10"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+            
+            {/* Authentication buttons */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
-                {item.name}
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="bg-[#d9b15c] hover:bg-[#c4a052] text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Login
               </Link>
-            ))}
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -73,6 +115,25 @@ const Navbar = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile authentication buttons */}
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors mt-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-3 py-2 bg-[#d9b15c] hover:bg-[#c4a052] text-white rounded-md font-medium transition-colors mt-2"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         )}

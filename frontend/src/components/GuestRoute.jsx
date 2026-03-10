@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, requiredRole = null }) => {
+const GuestRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -12,12 +12,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRole && user.role !== requiredRole) {
-    // Redirect based on user role instead of always going to login
+  if (user) {
     if (user.role === 'ADMIN') {
       return <Navigate to="/admin/dashboard" replace />;
     } else {
@@ -28,4 +23,4 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   return children;
 };
 
-export default ProtectedRoute;
+export default GuestRoute;
