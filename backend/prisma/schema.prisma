@@ -97,6 +97,7 @@ model reservation {
   userId               Int
   startDate            DateTime
   endDate              DateTime
+  destination          String?
   totalPrice           Float
   depositPaid          Float
   paymentStatus        payment_status             @default(UNPAID)

@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import CarCard from '../components/Car/CarCard';
 import CarFilters from '../components/Filters/CarFilters';
 import { carService } from '../services/carService';
-import { Search } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 
 const CarsPage = () => {
   const [cars, setCars] = useState([]);
@@ -34,14 +34,12 @@ const CarsPage = () => {
   const handleFiltersChange = (filters) => {
     let filtered = [...cars];
 
-    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(car =>
         `${car.brand || car.make} ${car.model}`.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Apply price range filter
     if (filters.priceRange) {
       filtered = filtered.filter(car => {
         const price = car.dailyPrice || car.pricePerDay || 0;
@@ -49,22 +47,10 @@ const CarsPage = () => {
       });
     }
 
-    // Apply other filters
-    if (filters.brand) {
-      filtered = filtered.filter(car => (car.brand || car.make) === filters.brand);
-    }
-
-    if (filters.fuelType) {
-      filtered = filtered.filter(car => car.fuelType === filters.fuelType);
-    }
-
-    if (filters.transmission) {
-      filtered = filtered.filter(car => car.transmission === filters.transmission);
-    }
-
-    if (filters.seats) {
-      filtered = filtered.filter(car => car.seats === parseInt(filters.seats));
-    }
+    if (filters.brand) filtered = filtered.filter(car => (car.brand || car.make) === filters.brand);
+    if (filters.fuelType) filtered = filtered.filter(car => car.fuelType === filters.fuelType);
+    if (filters.transmission) filtered = filtered.filter(car => car.transmission === filters.transmission);
+    if (filters.seats) filtered = filtered.filter(car => car.seats === parseInt(filters.seats));
 
     setFilteredCars(filtered);
   };
@@ -83,19 +69,17 @@ const CarsPage = () => {
   };
 
   const LoadingSkeleton = () => (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
-      <div className="h-48 bg-gray-300"></div>
-      <div className="p-6">
-        <div className="h-6 bg-gray-300 rounded mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded mb-4 w-2/3"></div>
-        <div className="flex justify-between mb-4">
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
+    <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-200 animate-pulse h-full flex flex-col">
+      <div className="h-56 bg-gray-200" />
+      <div className="p-5 flex flex-col flex-grow">
+        <div className="h-7 bg-gray-300 rounded mb-3 w-4/5" />
+        <div className="flex flex-wrap gap-2 mb-4">
+          <div className="h-6 bg-gray-300 rounded-full w-16" />
+          <div className="h-6 bg-gray-300 rounded-full w-20" />
         </div>
-        <div className="flex justify-between items-center">
-          <div className="h-8 bg-gray-300 rounded w-20"></div>
-          <div className="h-10 bg-gray-300 rounded w-24"></div>
+        <div className="mt-auto flex justify-between items-center">
+          <div className="h-8 bg-gray-300 rounded w-24" />
+          <div className="h-10 bg-gray-300 rounded-xl w-28" />
         </div>
       </div>
     </div>
@@ -105,69 +89,76 @@ const CarsPage = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12 lg:py-16">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-[#192336] mb-4">Our Fleet</h1>
-          <p className="text-xl text-[#6d6e71]">
-            Choose from our wide selection of premium vehicles
+        <div className="mb-10 text-center md:text-left">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#192336] tracking-tight">
+            Our <span className="text-[#004aad]">Fleet</span>
+          </h1>
+          <p className="mt-3 text-lg md:text-xl text-[#6d6e71]">
+            Discover premium vehicles for every journey
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        {/* Search + Mobile Filter Toggle */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="relative flex-1 max-w-lg">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-6 h-6" />
             <input
               type="text"
-              placeholder="Search cars..."
+              placeholder="Search by brand or model..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d9b15c] focus:border-transparent"
+              className="w-full pl-14 pr-6 py-4 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d9b15c] shadow-sm transition-all text-lg"
             />
           </div>
+          <button className="md:hidden flex items-center justify-center gap-2 bg-[#004aad] text-white px-6 py-3 rounded-xl font-medium shadow-md">
+            <SlidersHorizontal className="h-5 w-5" />
+            Filters
+          </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-1/4">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+          {/* Filters - Sticky on large screens */}
+          <div className="lg:w-80 lg:sticky lg:top-24 lg:self-start">
             <CarFilters onFiltersChange={handleFiltersChange} cars={cars} />
           </div>
 
-          {/* Cars Grid */}
-          <div className="lg:w-3/4">
+          {/* Results */}
+          <div className="flex-1">
             {error ? (
-              <div className="text-center py-12">
-                <p className="text-red-600 mb-4">Failed to load vehicles: {error}</p>
+              <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
+                <p className="text-xl text-red-600 font-medium mb-6">Failed to load fleet: {error}</p>
                 <button
                   onClick={fetchCars}
-                  className="bg-[#d9b15c] hover:bg-[#c4a052] text-white px-6 py-2 rounded-lg"
+                  className="bg-[#d9b15c] hover:bg-[#c4a052] text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all shadow-md hover:shadow-lg"
                 >
                   Try Again
                 </button>
               </div>
             ) : (
               <>
-                {/* Results Count */}
-                <div className="mb-6">
-                  <p className="text-[#6d6e71]">
-                    {loading ? 'Loading...' : `${filteredCars.length} vehicles found`}
+                <div className="mb-8 flex justify-between items-center">
+                  <p className="text-lg text-[#6d6e71] font-medium">
+                    {loading ? 'Loading vehicles...' : `${filteredCars.length} vehicles available`}
                   </p>
                 </div>
 
-                {/* Cars Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
                   {loading
-                    ? [...Array(6)].map((_, index) => <LoadingSkeleton key={index} />)
-                    : filteredCars.map((car) => <CarCard key={car.id} car={car} />)
+                    ? [...Array(6)].map((_, i) => <LoadingSkeleton key={i} />)
+                    : filteredCars.map((car) => (
+                        <div key={car.id} className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                          <CarCard car={car} />
+                        </div>
+                      ))
                   }
                 </div>
 
-                {/* No Results */}
                 {!loading && filteredCars.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-[#6d6e71] text-lg">No vehicles match your criteria.</p>
-                    <p className="text-[#6d6e71] mt-2">Try adjusting your filters.</p>
+                  <div className="text-center py-20">
+                    <p className="text-2xl text-[#192336] font-semibold mb-4">No vehicles found</p>
+                    <p className="text-[#6d6e71] text-lg">Try adjusting your search or filters</p>
                   </div>
                 )}
               </>

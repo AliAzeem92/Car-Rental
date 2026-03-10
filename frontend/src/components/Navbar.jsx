@@ -18,7 +18,6 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
-  // Define navigation items based on authentication state
   const getNavItems = () => {
     const baseItems = [
       { name: "Home", path: "/" },
@@ -36,108 +35,105 @@ const Navbar = () => {
   const navItems = getNavItems();
 
   return (
-    <nav className="bg-[#192336] text-white sticky top-0 z-50 shadow-lg">
+    <nav className="bg-[#192336]/95 backdrop-blur-md text-white sticky top-0 z-50 border-b border-[#004aad]/30 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-16 md:h-18">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <Car className="h-8 w-8 text-[#d9b15c]" />
-            <span className="text-xl font-bold">CAR RENTAL</span>
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="p-2 bg-[#d9b15c]/10 rounded-lg group-hover:bg-[#d9b15c]/20 transition-colors">
+              <Car className="h-8 w-8 text-[#d9b15c]" />
+            </div>
+            <span className="text-2xl font-extrabold tracking-tight">CAR RENTAL</span>
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-10">
             <div className="flex space-x-8">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.path
-                      ? "text-[#d9b15c] bg-[#004aad]/20 border-b border-[#d9b15c] "
-                      : "text-white hover:text-[#d9b15c] hover:bg-[#004aad]/10"
-                  }`}
+                  className={`
+                    relative px-3 py-2 text-base font-medium transition-all duration-300
+                    ${location.pathname === item.path
+                      ? "text-[#d9b15c] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#d9b15c] after:rounded-full"
+                      : "text-gray-300 hover:text-white hover:scale-105"}
+                  `}
                 >
                   {item.name}
                 </Link>
               ))}
             </div>
-            
-            {/* Authentication buttons */}
+
+            {/* Auth Buttons */}
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="flex items-center gap-2 bg-red-600/90 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg hover:scale-[1.02]"
               >
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
+                <LogOut className="h-5 w-5" />
+                Logout
               </button>
             ) : (
               <Link
                 to="/login"
-                className="bg-[#d9b15c] hover:bg-[#c4a052] text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-[#d9b15c] hover:bg-[#c4a052] text-[#192336] font-semibold px-8 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-[1.02]"
               >
                 Login
               </Link>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-white hover:text-[#d9b15c] p-2"
-            >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
+          {/* Mobile Toggle */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-[#004aad]/20 transition-colors"
+          >
+            {isOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu - Slide down with blur */}
+      {isOpen && (
+        <div className="md:hidden bg-[#192336]/95 backdrop-blur-lg border-t border-[#004aad]/30 animate-fadeIn">
+          <div className="px-4 py-6 space-y-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                onClick={() => setIsOpen(false)}
+                className={`
+                  block px-5 py-3 rounded-xl text-lg font-medium transition-all
+                  ${location.pathname === item.path
+                    ? "bg-[#004aad]/30 text-[#d9b15c]"
+                    : "text-gray-300 hover:bg-[#004aad]/20 hover:text-white"}
+                `}
+              >
+                {item.name}
+              </Link>
+            ))}
+
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold mt-4 transition-all"
+              >
+                <LogOut className="h-5 w-5" />
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="block text-center bg-[#d9b15c] hover:bg-[#c4a052] text-[#192336] py-3 rounded-xl font-semibold mt-4 transition-all"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-[#192336] border-t border-[#004aad]/20">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  onClick={() => setIsOpen(false)}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    location.pathname === item.path
-                      ? "text-[#d9b15c] bg-[#004aad]/20"
-                      : "text-white hover:text-[#d9b15c] hover:bg-[#004aad]/10"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              
-              {/* Mobile authentication buttons */}
-              {isAuthenticated ? (
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors mt-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </button>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="block px-3 py-2 bg-[#d9b15c] hover:bg-[#c4a052] text-white rounded-md font-medium transition-colors mt-2"
-                >
-                  Login
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </nav>
   );
 };

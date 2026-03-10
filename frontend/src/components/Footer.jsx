@@ -14,30 +14,10 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   const features = [
-    {
-      icon: MapPin,
-      title: "Unlimited KM",
-      description: "No Extra Charge",
-      bgColor: "bg-[#d9b15c]",
-    },
-    {
-      icon: Shield,
-      title: "Full Insurance",
-      description: "Included",
-      bgColor: "bg-green-500",
-    },
-    {
-      icon: Phone,
-      title: "24/7 Roadside",
-      description: "Assistance",
-      bgColor: "bg-blue-500",
-    },
-    {
-      icon: Clock,
-      title: "Free",
-      description: "Up to Hours",
-      bgColor: "bg-purple-500",
-    },
+    { icon: MapPin, title: "Unlimited KM", description: "No Extra Charge", bgColor: "bg-[#d9b15c]" },
+    { icon: Shield, title: "Full Insurance", description: "Included", bgColor: "bg-green-600" },
+    { icon: Phone, title: "24/7 Roadside", description: "Assistance", bgColor: "bg-blue-600" },
+    { icon: Clock, title: "Fast Pickup", description: "Anywhere", bgColor: "bg-purple-600" },
   ];
 
   const quickLinks = [
@@ -47,88 +27,69 @@ const Footer = () => {
     { name: "About", path: "/about" },
   ];
 
-  const services = [
-    "Car Rental",
-    "Long Term Rental",
-    "Airport Transfer",
-    "Corporate Rental",
-  ];
+  const services = ["Car Rental", "Long Term Rental", "Airport Transfer", "Corporate Rental"];
 
   const socialLinks = [
-    { icon: Facebook, href: "#", color: "hover:text-blue-600" },
-    { icon: Twitter, href: "#", color: "hover:text-blue-400" },
+    { icon: Facebook, href: "#", color: "hover:text-blue-500" },
+    { icon: Twitter, href: "#", color: "hover:text-sky-400" },
     { icon: Instagram, href: "#", color: "hover:text-pink-500" },
-    { icon: Linkedin, href: "#", color: "hover:text-blue-700" },
+    { icon: Linkedin, href: "#", color: "hover:text-blue-600" },
   ];
 
   return (
     <footer className="bg-white">
-      {/* Feature Highlights Section */}
-      <div className="py-6 border-t">
+      {/* Features Bar */}
+      <div className="border-t border-gray-200 py-8 md:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 
-                    divide-y md:divide-y-0 md:divide-x 
-                    divide-gray-200"
-          >
-            {features.map((feature, index) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
+            {features.map((feature, i) => (
               <div
-                key={index}
-                className="flex items-center gap-4 p-6 group transition-all duration-300 hover:bg-gray-50"
+                key={i}
+                className="flex flex-col items-center text-center group"
               >
-                <div className="flex items-center justify-center w-14 h-14 rounded-full bg-[#d9b15c] border border-[#5e594d] shadow-sm group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="h-7 w-7 text-white " />
+                <div className={`w-16 h-16 rounded-2xl ${feature.bgColor} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="h-8 w-8 text-white" />
                 </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-[#192336]">
-                    {feature.title}
-                  </h3>
-                  <p className="text-[#6d6e71] text-sm">
-                    {feature.description}
-                  </p>
-                </div>
+                <h3 className="font-bold text-[#192336] text-lg">{feature.title}</h3>
+                <p className="text-[#6d6e71] text-sm mt-1">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Main Footer Content */}
-      <div className="bg-[#192336] text-white py-12">
+      {/* Main Footer */}
+      <div className="bg-[#192336] text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Company Info */}
-            <div className="lg:col-span-1">
-              <div className="flex items-center space-x-2 mb-4">
-                <Car className="h-8 w-8 text-[#d9b15c]" />
-                <span className="text-xl font-bold">CAR RENTAL</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center space-x-3 mb-6">
+                <Car className="h-10 w-10 text-[#d9b15c]" />
+                <span className="text-2xl font-bold">CAR RENTAL</span>
               </div>
-              <p className="text-gray-300 mb-4 text-sm">
-                Your trusted partner for premium car rental services. We provide
-                exceptional vehicles and outstanding customer service for all
-                your transportation needs.
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                Premium vehicles, exceptional service — your journey starts here.
               </p>
-              <div className="flex items-center space-x-2 text-gray-300 mb-2">
-                <Mail className="h-4 w-4" />
-                <span className="text-sm">info@carrental.com</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-300">
-                <Phone className="h-4 w-4" />
-                <span className="text-sm">+1 800 123 4567</span>
+              <div className="space-y-3 text-gray-300 text-sm">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5" />
+                  info@carrental.com
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5" />
+                  +1 800 123 4567
+                </div>
               </div>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                {quickLinks.map((link, index) => (
-                  <li key={index}>
-                    <Link
-                      to={link.path}
-                      className="text-gray-300 hover:text-[#d9b15c] transition-colors text-sm"
-                    >
+              <h3 className="text-xl font-bold mb-6">Quick Links</h3>
+              <ul className="space-y-4">
+                {quickLinks.map((link, i) => (
+                  <li key={i}>
+                    <Link to={link.path} className="text-gray-300 hover:text-[#d9b15c] transition-colors">
                       {link.name}
                     </Link>
                   </li>
@@ -138,34 +99,32 @@ const Footer = () => {
 
             {/* Services */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Services</h3>
-              <ul className="space-y-2">
-                {services.map((service, index) => (
-                  <li key={index} className="text-gray-300 text-sm">
-                    {service}
-                  </li>
+              <h3 className="text-xl font-bold mb-6">Our Services</h3>
+              <ul className="space-y-4">
+                {services.map((service, i) => (
+                  <li key={i} className="text-gray-300">{service}</li>
                 ))}
               </ul>
             </div>
 
-            {/* Contact & Social */}
+            {/* Social & Address */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-              <div className="flex space-x-4 mb-4">
-                {socialLinks.map((social, index) => (
+              <h3 className="text-xl font-bold mb-6">Follow Us</h3>
+              <div className="flex space-x-5 mb-8">
+                {socialLinks.map((social, i) => (
                   <a
-                    key={index}
+                    key={i}
                     href={social.href}
-                    className={`text-gray-300 ${social.color} transition-colors`}
+                    className={`text-gray-300 transition-colors text-2xl ${social.color}`}
                   >
-                    <social.icon className="h-5 w-5" />
+                    <social.icon />
                   </a>
                 ))}
               </div>
-              <div className="text-gray-300 text-sm">
-                <p className="mb-1">123 Business Street</p>
-                <p className="mb-1">City, State 12345</p>
-                <p>Open 24/7</p>
+              <div className="text-gray-300 text-sm space-y-2">
+                <p>123 Premium Drive</p>
+                <p>Faisalabad, Punjab</p>
+                <p className="mt-4">Available 24/7</p>
               </div>
             </div>
           </div>
@@ -173,21 +132,13 @@ const Footer = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="bg-[#0f1419] text-gray-400 py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm">
-            <p>&copy; 2024 Car Rental. All rights reserved.</p>
-            <div className="flex space-x-6 mt-2 md:mt-0">
-              <a href="#" className="hover:text-white transition-colors">
-                Privacy Policy
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Terms of Service
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Cookie Policy
-              </a>
-            </div>
+      <div className="bg-[#0f1419] text-gray-400 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left md:flex md:justify-between md:items-center text-sm">
+          <p>© {new Date().getFullYear()} Car Rental. All rights reserved.</p>
+          <div className="flex justify-center gap-6 mt-4 md:mt-0">
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <a href="#" className="hover:text-white transition-colors">Cookies</a>
           </div>
         </div>
       </div>

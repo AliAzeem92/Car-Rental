@@ -20,7 +20,6 @@ const Home = () => {
     try {
       setLoading(true);
       const cars = await carService.fetchCars();
-      // Show only first 3 cars as featured
       setFeaturedCars(cars.slice(0, 3));
     } catch (error) {
       console.error("Error fetching cars:", error);
@@ -35,60 +34,67 @@ const Home = () => {
   };
 
   const LoadingSkeleton = () => (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
-      <div className="h-48 bg-gray-300"></div>
-      <div className="p-6">
-        <div className="h-6 bg-gray-300 rounded mb-2"></div>
-        <div className="h-4 bg-gray-300 rounded mb-4 w-2/3"></div>
-        <div className="flex justify-between mb-4">
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
-          <div className="h-4 bg-gray-300 rounded w-16"></div>
+    <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-md animate-pulse flex flex-col h-full">
+      <div className="relative h-56 md:h-64 bg-gray-200">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+      </div>
+      <div className="p-5 md:p-6 flex flex-col flex-grow">
+        <div className="h-7 bg-gray-300 rounded mb-3 w-5/6"></div>
+        <div className="flex flex-wrap gap-2 mb-5">
+          <div className="h-6 bg-gray-300 rounded-full w-20"></div>
+          <div className="h-6 bg-gray-300 rounded-full w-20"></div>
+          <div className="h-6 bg-gray-300 rounded-full w-20"></div>
         </div>
-        <div className="flex justify-between items-center">
-          <div className="h-8 bg-gray-300 rounded w-20"></div>
-          <div className="h-10 bg-gray-300 rounded w-24"></div>
+        <div className="mt-auto flex items-center justify-between">
+          <div className="h-8 bg-gray-300 rounded w-24"></div>
+          <div className="h-11 bg-gray-300 rounded-xl w-32"></div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <Hero />
 
-      {/* Featured Vehicles Section */}
-      <section className="py-16 bg-white">
+      {/* Featured Vehicles Section - Upgraded */}
+      <section className="py-20 md:py-24 bg-gradient-to-b from-white via-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-[#192336] mb-4">
-              Featured <span className="text-[#004aad]">Vehicles</span>
-            </h2>
-            <p className="text-xl text-[#6d6e71]">
-              Choose From Our{" "}
-              <span className="font-semibold text-[#192336]">
-                Premium Fleet
+          <div className="text-center mb-14 md:mb-16">
+            <h2 className="text-4xl md:text-5xl font-extrabold text-[#192336] tracking-tight">
+              Featured <span className="text-[#004aad] relative">
+                Vehicles
+                <span className="absolute -bottom-2 left-0 right-0 h-1 bg-[#d9b15c]/60 rounded-full"></span>
               </span>
+            </h2>
+            <p className="mt-4 text-xl md:text-2xl text-[#6d6e71] font-medium">
+              Discover Our <span className="text-[#192336] font-semibold">Premium Selection</span>
             </p>
           </div>
 
           {error ? (
-            <div className="text-center py-12">
-              <p className="text-red-600 mb-4">Failed to load vehicles: {error}</p>
+            <div className="text-center py-16 bg-white/80 rounded-2xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
+              <p className="text-xl text-red-600 mb-6 font-medium">
+                Failed to load featured vehicles: {error}
+              </p>
               <button
                 onClick={fetchFeaturedCars}
-                className="bg-[#d9b15c] hover:bg-[#c4a052] text-white px-6 py-2 rounded-lg"
+                className="bg-[#d9b15c] hover:bg-[#c4a052] text-white font-semibold px-8 py-3 rounded-xl text-lg transition-all shadow-md hover:shadow-lg hover:scale-[1.02]"
               >
                 Try Again
               </button>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10 mb-12 md:mb-16">
                 {loading
                   ? [...Array(3)].map((_, index) => <LoadingSkeleton key={index} />)
-                  : featuredCars.map((car) => <CarCard key={car.id} car={car} />)
+                  : featuredCars.map((car) => (
+                      <div className="transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                        <CarCard key={car.id} car={car} />
+                      </div>
+                    ))
                 }
               </div>
 
@@ -96,9 +102,16 @@ const Home = () => {
                 <div className="text-center">
                   <button
                     onClick={handleViewAllCars}
-                    className="bg-[#004aad] hover:bg-[#003a8c] text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
+                    className="
+                      bg-[#004aad] hover:bg-[#003a8c] 
+                      text-white font-bold text-lg md:text-xl 
+                      py-4 px-10 md:px-12 rounded-xl 
+                      shadow-lg hover:shadow-xl 
+                      transition-all duration-300 
+                      transform hover:scale-[1.05] active:scale-[0.98]
+                    "
                   >
-                    View All Cars
+                    View Full Fleet
                   </button>
                 </div>
               )}

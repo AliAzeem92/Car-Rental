@@ -1,151 +1,140 @@
-import { useState } from 'react';
-import { Filter, X } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Filter, Calendar, DollarSign } from "lucide-react";
+import { useFilter } from "../../context/FilterContext";
 
-const CarFilters = ({ onFiltersChange, cars = [] }) => {
-  const [filters, setFilters] = useState({
-    priceRange: [0, 500],
-    fuelType: '',
-    transmission: '',
-    brand: '',
-    seats: ''
-  });
+const CarFilters = ({ categories = [] }) => {
+  const { filters, updateFilter } = useFilter();
+  const [priceRange, setPriceRange] = useState(filters.priceRange || [30, 500]);
 
-  const [isOpen, setIsOpen] = useState(false);
+  const defaultCategories = ["All Cars", "SUV", "Sedan", "Luxury", "Economy", "Hatchback", "Convertible"];
+  const availableCategories = categories.length > 0 ? ["All Cars", ...categories] : defaultCategories;
 
-  // Extract unique values from cars data
-  const getUniqueValues = (key) => {
-    const values = cars.map(car => car[key]).filter(Boolean);
-    return [...new Set(values)].sort();
-  };
-
-  const handleFilterChange = (key, value) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    onFiltersChange(newFilters);
-  };
-
-  const clearFilters = () => {
-    const clearedFilters = {
-      priceRange: [0, 500],
-      fuelType: '',
-      transmission: '',
-      brand: '',
-      seats: ''
-    };
-    setFilters(clearedFilters);
-    onFiltersChange(clearedFilters);
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateFilter("priceRange", priceRange);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [priceRange, updateFilter]);
 
   return (
-    <>
-      {/* Mobile Filter Toggle */}
-      <div className="lg:hidden mb-4">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-md border"
-        >
-          <Filter className="w-4 h-4" />
-          <span>Filters</span>
-        </button>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 lg:p-8 sticky top-24">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 bg-[#d9b15c]/10 rounded-xl">
+          <Filter className="h-6 w-6 text-[#192336]" />
+        </div>
+        <h3 className="text-2xl font-bold text-[#192336]">Refine Your Search</h3>
       </div>
 
-      {/* Filter Panel */}
-      <div className={`bg-white rounded-lg shadow-md p-6 ${isOpen ? 'block' : 'hidden lg:block'}`}>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-[#192336]">Filters</h3>
-          <button
-            onClick={clearFilters}
-            className="text-sm text-[#d9b15c] hover:text-[#c4a052] font-medium"
-          >
-            Clear All
-          </button>
+      {/* Category */}
+      <div className="mb-10">
+        <h4 className="font-semibold text-[#192336] mb-4 text-lg">Category</h4>
+        <div className="space-y-3">
+          {availableCategories.map((cat) => (
+            <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="category"
+                value={cat}
+                checked={filters.category === cat}
+                onChange={(e) => updateFilter("category", e.target.value)}
+                className="w-5 h-5 text-[#d9b15c] border-gray-300 focus:ring-[#d9b15c] cursor-pointer"
+              />
+              <span className="text-[#6d6e71] group-hover:text-[#192336] transition-colors">{cat}</span>
+            </label>
+          ))}
         </div>
+      </div>
 
-        {/* Price Range */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-[#192336] mb-2">
-            Price Range (per day)
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.priceRange[0]}
-              onChange={(e) => handleFilterChange('priceRange', [parseInt(e.target.value) || 0, filters.priceRange[1]])}
-              className="w-20 px-2 py-1 border rounded text-sm"
-            />
-            <span>-</span>
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.priceRange[1]}
-              onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value) || 500])}
-              className="w-20 px-2 py-1 border rounded text-sm"
-            />
+      {/* Dates */}
+      <div className="mb-10">
+        <h4 className="font-semibold text-[#192336] mb-4 text-lg">Rental Period</h4>
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-[#6d6e71] mb-2">Pickup</label>
+            <div className="relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="date"
+                value={filters.pickupDate}
+                onChange={(e) => updateFilter("pickupDate", e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#d9b15c] focus:border-transparent shadow-sm"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#6d6e71] mb-2">Return</label>
+            <div className="relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="date"
+                value={filters.returnDate}
+                onChange={(e) => updateFilter("returnDate", e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#d9b15c] focus:border-transparent shadow-sm"
+              />
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Brand */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-[#192336] mb-2">Brand</label>
-          <select
-            value={filters.brand}
-            onChange={(e) => handleFilterChange('brand', e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d9b15c]"
-          >
-            <option value="">All Brands</option>
-            {getUniqueValues('brand').map(brand => (
-              <option key={brand} value={brand}>{brand}</option>
-            ))}
-          </select>
-        </div>
+      {/* Price Range */}
+      <div>
+        <h4 className="font-semibold text-[#192336] mb-4 text-lg">Price per Day</h4>
+        <div className="space-y-6">
+          <div className="flex gap-6">
+            <div className="flex-1">
+              <label className="block text-sm text-[#6d6e71] mb-2">Min</label>
+              <div className="relative">
+                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="number"
+                  value={priceRange[0]}
+                  onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#d9b15c] shadow-sm"
+                  placeholder="30"
+                />
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm text-[#6d6e71] mb-2">Max</label>
+              <div className="relative">
+                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="number"
+                  value={priceRange[1]}
+                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 500])}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#d9b15c] shadow-sm"
+                  placeholder="500"
+                />
+              </div>
+            </div>
+          </div>
 
-        {/* Fuel Type */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-[#192336] mb-2">Fuel Type</label>
-          <select
-            value={filters.fuelType}
-            onChange={(e) => handleFilterChange('fuelType', e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d9b15c]"
-          >
-            <option value="">All Fuel Types</option>
-            {getUniqueValues('fuelType').map(fuel => (
-              <option key={fuel} value={fuel}>{fuel}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Transmission */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-[#192336] mb-2">Transmission</label>
-          <select
-            value={filters.transmission}
-            onChange={(e) => handleFilterChange('transmission', e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d9b15c]"
-          >
-            <option value="">All Transmissions</option>
-            {getUniqueValues('transmission').map(trans => (
-              <option key={trans} value={trans}>{trans}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Seats */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-[#192336] mb-2">Seats</label>
-          <select
-            value={filters.seats}
-            onChange={(e) => handleFilterChange('seats', e.target.value)}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d9b15c]"
-          >
-            <option value="">Any Seats</option>
-            {getUniqueValues('seats').map(seats => (
-              <option key={seats} value={seats}>{seats} Seats</option>
-            ))}
-          </select>
+          {/* Dual Range Slider */}
+          <div className="relative py-4">
+            <input
+              type="range"
+              min="30"
+              max="500"
+              value={priceRange[0]}
+              onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
+              className="absolute w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-[#d9b15c] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+            />
+            <input
+              type="range"
+              min="30"
+              max="500"
+              value={priceRange[1]}
+              onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+              className="absolute w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-[#d9b15c] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+            />
+            <div className="flex justify-between text-sm font-medium text-[#6d6e71] mt-8">
+              <span>${priceRange[0]}</span>
+              <span>${priceRange[1]}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

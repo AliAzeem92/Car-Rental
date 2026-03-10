@@ -55,7 +55,7 @@ export const customerAPI = {
 
 export const reservationAPI = {
   getAll: (params) => api.get('/reservations', { params }),
-  getCustomerReservations: () => api.get('/reservations/customer'),
+  getCustomerReservations: () => api.get('/reservations', { params: { userId: 'current' } }),
   create: (data) => api.post('/reservations', data),
   updateStatus: (id, status) => api.put(`/reservations/${id}/status`, { status }),
   updatePaymentStatus: (id, paymentStatus) => api.put(`/reservations/${id}/payment-status`, { paymentStatus }),

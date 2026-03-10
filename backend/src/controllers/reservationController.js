@@ -29,9 +29,16 @@ export const getReservations = async (req, res) => {
   try {
     const { status, vehicleId, userId } = req.query;
     const where = {};
+    
+    // If userId is 'current', use the authenticated user's ID
+    if (userId === 'current' && req.userId) {
+      where.userId = req.userId;
+    } else if (userId) {
+      where.userId = parseInt(userId);
+    }
+    
     if (status) where.status = status;
     if (vehicleId) where.vehicleId = parseInt(vehicleId);
-    if (userId) where.userId = parseInt(userId);
 
     const reservations = await prisma.reservation.findMany({
       where,
@@ -43,7 +50,17 @@ export const getReservations = async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
-    res.json(reservations);
+    
+    // Transform vehicle images for frontend
+    const transformedReservations = reservations.map(reservation => ({
+      ...reservation,
+      vehicle: {
+        ...reservation.vehicle,
+        imageUrl: reservation.vehicle.vehicleimage?.[0]?.imageUrl || null
+      }
+    }));
+    
+    res.json(transformedReservations);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -51,7 +68,15 @@ export const getReservations = async (req, res) => {
 
 export const createReservation = async (req, res) => {
   try {
-    const { vehicleId, userId, startDate, endDate, totalPrice, depositPaid } = req.body;
+    console.log('📥 Create Reservation Request:', req.body); // Debug log
+    
+    const { vehicleId, userId, startDate, endDate, destination, totalPrice, depositPaid } = req.body;
+
+    // Validate required fields
+    if (!vehicleId || !userId || !startDate || !endDate || !totalPrice) {
+      console.log('❌ Missing required fields:', { vehicleId, userId, startDate, endDate, totalPrice });
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
     const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
     if (!user) {
@@ -77,11 +102,15 @@ export const createReservation = async (req, res) => {
         userId: parseInt(userId),
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        destination: destination || null,
         totalPrice: parseFloat(totalPrice),
         depositPaid: parseFloat(depositPaid),
         contractNumber: generateContractNumber()
       },
-      include: { vehicle: true, user: true }
+      include: { 
+        vehicle: { include: { vehicleimage: true } }, 
+        user: true 
+      }
     });
 
     await prisma.vehicle.update({
@@ -89,8 +118,10 @@ export const createReservation = async (req, res) => {
       data: { status: 'RESERVED' }
     });
 
+    console.log('✅ Reservation created successfully:', reservation.id);
     res.status(201).json(reservation);
   } catch (error) {
+    console.error('❌ Reservation creation failed:', error);
     res.status(500).json({ error: error.message });
   }
 };

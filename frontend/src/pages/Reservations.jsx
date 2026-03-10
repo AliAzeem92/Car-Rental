@@ -489,6 +489,12 @@ const Reservations = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">
+                  Destination
+                </label>
+                <p className="text-gray-900">{viewModal.destination || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600">
                   Total Price
                 </label>
                 <p className="text-gray-900 font-semibold">
