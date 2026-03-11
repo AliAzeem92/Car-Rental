@@ -5,12 +5,16 @@ import { MaintenanceProvider } from './context/MaintenanceContext';
 import { FilterProvider } from './context/FilterContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import CustomerRoute from './components/CustomerRoute';
 import GuestRoute from './components/GuestRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Vehicles from './pages/Vehicles';
 import Reservations from './pages/Reservations';
+import Planning from './pages/Planning';
 import Customers from './pages/Customers';
 import Maintenance from './pages/Maintenance';
 import Settings from './pages/Settings';
@@ -22,6 +26,7 @@ import CarsPage from './pages/CarsPage';
 import CarDetailPage from './pages/CarDetailPage';
 import BookingPage from './pages/BookingPage';
 import CustomerReservations from './pages/CustomerReservations';
+import CustomerProfile from './pages/CustomerProfile';
 import About from './pages/About';
 
 function App() {
@@ -44,24 +49,39 @@ function App() {
                     <Login />
                   </GuestRoute>
                 } />
+                <Route path="/register" element={
+                  <GuestRoute>
+                    <Register />
+                  </GuestRoute>
+                } />
+                <Route path="/forgot-password" element={
+                  <GuestRoute>
+                    <ForgotPassword />
+                  </GuestRoute>
+                } />
                 
                 {/* Protected routes */}
                 <Route path="/booking/:carId" element={
-                  <ProtectedRoute>
+                  <CustomerRoute>
                     <BookingPage />
-                  </ProtectedRoute>
+                  </CustomerRoute>
                 } />
                 
                 {/* Customer protected routes */}
                 <Route path="/reservations" element={
-                  <ProtectedRoute requiredRole="CUSTOMER">
+                  <CustomerRoute>
                     <CustomerReservations />
-                  </ProtectedRoute>
+                  </CustomerRoute>
+                } />
+                <Route path="/profile" element={
+                  <CustomerRoute>
+                    <CustomerProfile />
+                  </CustomerRoute>
                 } />
                 <Route path="/customer/portal" element={
-                  <ProtectedRoute requiredRole="CUSTOMER">
+                  <CustomerRoute>
                     <CustomerPortal />
-                  </ProtectedRoute>
+                  </CustomerRoute>
                 } />
                 
                 {/* Admin protected routes */}
@@ -74,6 +94,7 @@ function App() {
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="cars" element={<Vehicles />} />
                   <Route path="bookings" element={<Reservations />} />
+                  <Route path="planning" element={<Planning />} />
                   <Route path="customers" element={<Customers />} />
                   <Route path="maintenance" element={<Maintenance />} />
                   <Route path="settings" element={<Settings />} />

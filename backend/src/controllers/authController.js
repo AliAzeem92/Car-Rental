@@ -39,7 +39,7 @@ export const login = async (req, res) => {
       ...(user.firstName && { firstName: user.firstName, lastName: user.lastName })
     };
 
-    res.json({ message: 'Login successful', user: userData });
+    res.json({ message: 'Login successful', token, user: userData });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -98,7 +98,16 @@ export const register = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    res.status(201).json({ user: { id: user.id, email: user.email, firstName: user.firstName, role: user.role } });
+    res.status(201).json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        firstName: user.firstName, 
+        lastName: user.lastName,
+        role: user.role 
+      } 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

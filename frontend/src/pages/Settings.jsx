@@ -4,6 +4,7 @@ import { useToast } from "../context/ToastContext";
 import api from "../services/api";
 import { Camera } from "lucide-react";
 import { compressImage } from "../utils/imageCompression";
+import InvoiceSettings from "../components/InvoiceSettings";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -116,10 +117,7 @@ const Settings = () => {
 
   const tabs = [
     { id: "account", label: "Account" },
-    { id: "security", label: "Security" },
-    { id: "notifications", label: "Notifications" },
-    { id: "agencies", label: "Agencies" },
-    { id: "general", label: "General" },
+    { id: "invoice", label: "Invoice Settings" },
   ];
 
   return (
@@ -312,6 +310,8 @@ const Settings = () => {
           <p className="text-gray-600">Security settings coming soon...</p>
         </div>
       )}
+
+      {activeTab === "invoice" && <InvoiceSettings />}
 
       {activeTab === "notifications" && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

@@ -3,6 +3,7 @@ import { ReservationService } from '../services/reservationService.js';
 import { generateContractPDF } from '../utils/pdfGenerator.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { streamContractPDF } from '../utils/pdfStream.js';
+import { sendBookingConfirmation, sendReservationConfirmed, sendCarReturned, sendPaymentReceived, sendReservationCancelled } from '../config/email.js';
 
 const generateContractNumber = () => {
   return `CNT-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -78,10 +79,21 @@ export const createReservation = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Validate destination length
+    if (destination && destination.length > 200) {
+      return res.status(400).json({ error: 'Destination must not exceed 200 characters' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    // Prevent admins from creating customer reservations
+    if (user.role === 'ADMIN') {
+      return res.status(403).json({ error: 'Admins cannot create customer reservations' });
+    }
+
     if (user.isBlacklisted) {
       return res.status(403).json({ error: 'User is blacklisted' });
     }
@@ -117,6 +129,17 @@ export const createReservation = async (req, res) => {
       where: { id: parseInt(vehicleId) },
       data: { status: 'RESERVED' }
     });
+
+    // Send booking confirmation email
+    const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+    await sendBookingConfirmation(
+      user.email,
+      `${user.firstName} ${user.lastName}`,
+      vehicleName,
+      reservation.startDate,
+      reservation.endDate,
+      reservation.contractNumber
+    );
 
     console.log('✅ Reservation created successfully:', reservation.id);
     res.status(201).json(reservation);
@@ -157,9 +180,46 @@ export const updateReservationStatus = async (req, res) => {
           data: { contractPdfUrl }
         });
         reservation.contractPdfUrl = contractPdfUrl;
+
+        // Send reservation confirmed email
+        const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+        await sendReservationConfirmed(
+          reservation.user.email,
+          `${reservation.user.firstName} ${reservation.user.lastName}`,
+          vehicleName,
+          reservation.startDate,
+          reservation.endDate,
+          reservation.contractNumber
+        );
       } catch (pdfError) {
         console.error('PDF generation failed:', pdfError.message);
       }
+    }
+
+    // Send car returned email on COMPLETED
+    if (status === 'COMPLETED') {
+      const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+      const checkin = await prisma.checkin.findUnique({ where: { reservationId: parseInt(id) } });
+      await sendCarReturned(
+        reservation.user.email,
+        `${reservation.user.firstName} ${reservation.user.lastName}`,
+        vehicleName,
+        reservation.contractNumber,
+        checkin?.extraCharges || 0
+      );
+    }
+
+    // Send cancellation email on CANCELLED
+    if (status === 'CANCELLED') {
+      const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+      await sendReservationCancelled(
+        reservation.user.email,
+        `${reservation.user.firstName} ${reservation.user.lastName}`,
+        vehicleName,
+        reservation.startDate,
+        reservation.endDate,
+        reservation.contractNumber
+      );
     }
 
     console.log('✅ Status updated successfully');
@@ -190,6 +250,18 @@ export const updatePaymentStatus = async (req, res) => {
       paymentStatus,
       userId
     );
+
+    // Send payment received email
+    if (paymentStatus === 'PAID' || paymentStatus === 'PARTIAL') {
+      const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+      await sendPaymentReceived(
+        reservation.user.email,
+        `${reservation.user.firstName} ${reservation.user.lastName}`,
+        vehicleName,
+        reservation.contractNumber,
+        paymentStatus
+      );
+    }
 
     console.log('✅ Payment status updated successfully');
     res.json(reservation);

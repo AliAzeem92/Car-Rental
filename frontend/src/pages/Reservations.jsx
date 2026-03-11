@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Grid, X, Calendar, Plus, Eye, Edit } from "lucide-react";
+import { Search, Grid, X, Calendar, Plus, Eye, Edit, Download } from "lucide-react";
 import {
   reservationAPI,
   vehicleAPI,
@@ -28,6 +28,7 @@ const Reservations = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({});
   const [formData, setFormData] = useState({
     vehicleId: "",
     customerId: "",
@@ -76,6 +77,9 @@ const Reservations = () => {
   };
 
   const handleStatusChange = async (id, status, type) => {
+    const loadingKey = `${id}-${type}`;
+    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
+    
     try {
       if (type === "payment") {
         await reservationAPI.updatePaymentStatus(id, status);
@@ -96,6 +100,8 @@ const Reservations = () => {
       const message =
         error.response?.data?.message || "Failed to update status";
       showToast(message, "error");
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -107,6 +113,32 @@ const Reservations = () => {
     } catch (error) {
       showToast(error.response?.data?.error || "Check-in failed", "error");
       throw error;
+    }
+  };
+
+  const handleDownloadInvoice = async (reservationId) => {
+    try {
+      const response = await fetch(`/api/invoices/reservations/${reservationId}/invoice`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to generate invoice');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${reservationId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      showToast('Invoice downloaded successfully', 'success');
+    } catch (error) {
+      showToast('Failed to download invoice', 'error');
     }
   };
 
@@ -274,6 +306,7 @@ const Reservations = () => {
                     onChange={handleStatusChange}
                     reservationId={reservation.id}
                     type="payment"
+                    loading={loadingStates[`${reservation.id}-payment`]}
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -282,6 +315,7 @@ const Reservations = () => {
                     onChange={handleStatusChange}
                     reservationId={reservation.id}
                     width="w-[113px]"
+                    loading={loadingStates[`${reservation.id}-status`]}
                   />
                 </td>
                 <td className="px-6 py-4">
@@ -289,15 +323,26 @@ const Reservations = () => {
                     <button
                       onClick={() => setViewModal(reservation)}
                       className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition"
+                      title="View Details"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setEditModal(reservation)}
                       className="border border-gray-300 hover:bg-gray-50 text-gray-700 p-2 rounded-lg transition"
+                      title="Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
+                    {(reservation.status === 'CONFIRMED' || reservation.status === 'COMPLETED') && (
+                      <button
+                        onClick={() => handleDownloadInvoice(reservation.id)}
+                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition"
+                        title="Download Invoice"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -495,7 +540,7 @@ const Reservations = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">
-                  Total Price
+                  Original Rental Price
                 </label>
                 <p className="text-gray-900 font-semibold">
                   €{viewModal.totalPrice.toFixed(2)}
@@ -509,6 +554,61 @@ const Reservations = () => {
                   €{viewModal.depositPaid.toFixed(2)}
                 </p>
               </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600">
+                  Extra Charges
+                </label>
+                <p className="text-gray-900 font-semibold">
+                  €{viewModal.checkin?.extraCharges?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <label className="text-sm font-semibold text-gray-600">
+                  Final Total Price
+                </label>
+                <p className="text-blue-600 text-xl font-bold">
+                  €{(viewModal.totalPrice + (viewModal.checkin?.extraCharges || 0)).toFixed(2)}
+                </p>
+              </div>
+            </div>
+
+            {/* Check-In Details Section */}
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Check-In Details
+              </h3>
+              {viewModal.checkin ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">
+                      Mileage In
+                    </label>
+                    <p className="text-gray-900">
+                      {viewModal.checkin.mileageIn?.toLocaleString()} km
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">
+                      Extra Charges
+                    </label>
+                    <p className="text-gray-900">
+                      €{viewModal.checkin.extraCharges?.toFixed(2) || '0.00'}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-semibold text-gray-600">
+                      Damage Report
+                    </label>
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {viewModal.checkin.damageReport || 'No damage reported'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">
+                  Vehicle has not been checked in yet.
+                </p>
+              )}
             </div>
           </div>
         )}

@@ -11,6 +11,7 @@ import reservationRoutes from './routes/reservationRoutes.js';
 import planningRoutes from './routes/planningRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import checkInOutRoutes from './routes/checkInOutRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/reservations', reservationRoutes);
 app.use('/api/planning', planningRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/checkinout', checkInOutRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // Health check
 app.get('/', (req, res) => {

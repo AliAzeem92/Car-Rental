@@ -27,6 +27,20 @@ export const updateCustomer = async (req, res) => {
     if (licenseNumber) updateData.licenseNumber = licenseNumber;
     if (licenseExpiryDate) updateData.licenseExpiryDate = new Date(licenseExpiryDate);
 
+    // Handle profile image upload
+    if (req.files?.profileImage) {
+      const { uploadToCloudinary } = await import('../utils/cloudinary.js');
+      const imageUrl = await uploadToCloudinary(req.files.profileImage[0].buffer, 'profiles');
+      updateData.profileImageUrl = imageUrl;
+    }
+
+    // Handle signature upload
+    if (req.files?.signature) {
+      const { uploadToCloudinary } = await import('../utils/cloudinary.js');
+      const signatureUrl = await uploadToCloudinary(req.files.signature[0].buffer, 'signatures');
+      updateData.signatureUrl = signatureUrl;
+    }
+
     const customer = await prisma.user.update({
       where: { id: parseInt(id) },
       data: updateData

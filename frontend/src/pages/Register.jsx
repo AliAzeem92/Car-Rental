@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', phone: '', address: '',
     licenseNumber: '', licenseExpiryDate: '', password: ''
@@ -17,8 +19,14 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Register the user
       await axios.post('/api/auth/register', formData, { withCredentials: true });
-      navigate('/customer/portal');
+      
+      // Auto-login after successful registration
+      await login({ email: formData.email, password: formData.password });
+      
+      // Redirect to home page
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally {
@@ -119,7 +127,7 @@ const Register = () => {
 
         <div className="mt-4 text-center">
           <button
-            onClick={() => navigate('/admin/login')}
+            onClick={() => navigate('/login')}
             className="text-blue-600 hover:underline text-sm"
           >
             Already have an account? Login

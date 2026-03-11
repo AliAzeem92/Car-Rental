@@ -21,6 +21,7 @@ model user {
   idCardUrl                String?
   licenseUrl               String?
   profileImageUrl          String?
+  signatureUrl             String?
   isBlacklisted            Boolean                    @default(false)
   createdAt                DateTime                   @default(now())
   reservation              reservation[]
@@ -114,6 +115,9 @@ model reservation {
 
   @@index([userId])
   @@index([vehicleId])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([status])
 }
 
 model reservationstatushistory {
@@ -180,6 +184,21 @@ model vehicleimage {
   vehicle   vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@index([vehicleId])
+}
+
+model invoicesettings {
+  id                Int      @id @default(autoincrement())
+  companyName       String   @default("Car Rental Company")
+  ownerName         String?
+  companyAddress    String?  @db.Text
+  companyPhone      String?
+  companyEmail      String?
+  companyLogoUrl    String?
+  termsConditions   String?  @db.Text
+  footerMessage     String?  @db.Text
+  adminSignatureUrl String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 enum user_role {

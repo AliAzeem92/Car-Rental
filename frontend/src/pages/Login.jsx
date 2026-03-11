@@ -107,6 +107,18 @@ const Login = () => {
 
         <div className="mt-6 text-center space-y-2">
           <button
+            onClick={() => navigate('/forgot-password')}
+            className="text-blue-600 hover:text-blue-700 text-sm font-medium hover:underline transition-colors block w-full"
+          >
+            Forgot Password?
+          </button>
+          <button
+            onClick={() => navigate('/register')}
+            className="text-gray-600 hover:text-gray-800 text-sm font-medium hover:underline transition-colors block w-full"
+          >
+            Don't have an account? Sign Up
+          </button>
+          <button
             onClick={() => navigate('/')}
             className="text-gray-600 hover:text-gray-800 text-sm font-medium hover:underline transition-colors block w-full"
           >

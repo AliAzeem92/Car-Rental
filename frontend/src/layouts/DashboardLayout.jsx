@@ -17,6 +17,7 @@ const DashboardLayout = () => {
     { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/admin/cars', label: 'Vehicles', icon: Car },
     { path: '/admin/bookings', label: 'Reservations', icon: Calendar },
+    { path: '/admin/planning', label: 'Calendar', icon: CalendarDays },
     { path: '/admin/customers', label: 'Customers', icon: Users },
     { path: '/admin/maintenance', label: 'Maintenance', icon: Wrench },
     { path: '/admin/settings', label: 'Settings', icon: SettingsIcon }

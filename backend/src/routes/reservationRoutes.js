@@ -3,11 +3,12 @@ import { getReservations, createReservation, updateReservationStatus, updatePaym
 import { getAvailableStatusTransitions } from '../controllers/statusController.js';
 import { authenticate, requireAdmin } from '../middleware/auth.js';
 import { upload } from '../middleware/upload.js';
+import { bookingLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
 router.get('/', authenticate, getReservations);
-router.post('/', authenticate, createReservation);
+router.post('/', bookingLimiter, authenticate, createReservation);
 router.get('/:id/available-transitions', authenticate, getAvailableStatusTransitions);
 router.put('/:id/status', authenticate, requireAdmin, updateReservationStatus);
 router.put('/:id/payment-status', authenticate, requireAdmin, updatePaymentStatus);

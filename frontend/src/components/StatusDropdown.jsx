@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { RESERVATION_STATUS, VEHICLE_STATUS, PAYMENT_STATUS } from '../utils/constants';
 
 const StatusDropdown = ({
@@ -8,6 +8,7 @@ const StatusDropdown = ({
   reservationId,
   type = "status",
   width,
+  loading = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -32,16 +33,26 @@ const StatusDropdown = ({
   return (
     <div className="relative inline-block" ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`${config[value]?.color || "bg-gray-500"} justify-between text-white px-4 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 ${width} hover:opacity-90 transition`}
+        onClick={() => !loading && setIsOpen(!isOpen)}
+        disabled={loading}
+        className={`${config[value]?.color || "bg-gray-500"} justify-between text-white px-4 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 ${width} hover:opacity-90 transition disabled:opacity-70 disabled:cursor-not-allowed`}
       >
-        {config[value]?.label || value}
-        <ChevronDown className="w-4 h-4" />
+        {loading ? (
+          <>
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Updating...
+          </>
+        ) : (
+          <>
+            {config[value]?.label || value}
+            <ChevronDown className="w-4 h-4" />
+          </>
+        )}
       </button>
 
       <div
         className={`absolute top-full left-0 mt-1 ${config[value]?.color || "bg-gray-500"} rounded-lg shadow-lg py-1 z-50 ${width} overflow-hidden transition-all duration-200 origin-top ${
-          isOpen
+          isOpen && !loading
             ? "opacity-100 scale-y-100"
             : "opacity-0 scale-y-0 pointer-events-none"
         }`}

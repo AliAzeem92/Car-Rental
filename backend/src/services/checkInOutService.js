@@ -52,6 +52,11 @@ export class CheckInOutService {
       throw new Error('Check-in mileage cannot be less than check-out mileage');
     }
 
+    // Validate damage report length
+    if (damageReport && damageReport.length > 500) {
+      throw new Error('Damage report must not exceed 500 characters');
+    }
+
     const result = await prisma.$transaction(async (tx) => {
       // Create check-in record
       const checkin = await tx.checkin.create({

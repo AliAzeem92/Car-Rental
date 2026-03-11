@@ -37,7 +37,7 @@ const ForgotPassword = () => {
     try {
       await api.post('/auth/reset-password', { email, code, newPassword });
       setSuccess('Password reset successful! Redirecting...');
-      setTimeout(() => navigate('/admin/login'), 2000);
+      setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to reset password');
     } finally {
@@ -49,7 +49,7 @@ const ForgotPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 p-4">
       <div className="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <button
-          onClick={() => navigate('/admin/login')}
+          onClick={() => navigate('/login')}
           className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

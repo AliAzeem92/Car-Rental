@@ -328,9 +328,16 @@ const BookingPage = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-[#d9b15c] hover:bg-[#c4a052] disabled:opacity-60 text-[#192336] font-bold py-5 px-8 rounded-xl text-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full bg-[#d9b15c] hover:bg-[#c4a052] disabled:opacity-60 text-[#192336] font-bold py-5 px-8 rounded-xl text-xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
                 >
-                  {submitting ? 'Processing Your Booking...' : 'Confirm & Book Now'}
+                  {submitting ? (
+                    <>
+                      <div className="w-6 h-6 border-3 border-[#192336]/30 border-t-[#192336] rounded-full animate-spin"></div>
+                      Processing Your Booking...
+                    </>
+                  ) : (
+                    'Confirm & Book Now'
+                  )}
                 </button>
               </form>
             </div>
