@@ -154,42 +154,93 @@ export const updateReservationStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const userId = req.userId;
+    const userRole = req.userRole;
 
     console.log('📥 Update Reservation Status Request:', {
       reservationId: id,
       requestedStatus: status,
-      userId
+      userId,
+      userRole
     });
 
-    const reservation = await ReservationService.updateReservationStatus(
+    // Fetch the reservation first
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: parseInt(id) },
+      include: { vehicle: true, user: true }
+    });
+
+    if (!reservation) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Reservation not found' 
+      });
+    }
+
+    // Role-based validation
+    if (userRole === 'CUSTOMER') {
+      // Customer can only cancel their own reservation
+      if (reservation.userId !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only cancel your own reservation'
+        });
+      }
+
+      // Customer can only set status to CANCELLED
+      if (status !== 'CANCELLED') {
+        return res.status(403).json({
+          success: false,
+          message: 'Customers can only cancel reservations'
+        });
+      }
+
+      // Check if reservation can be cancelled
+      if (reservation.status === 'ONGOING' || reservation.status === 'COMPLETED') {
+        return res.status(400).json({
+          success: false,
+          message: 'This reservation can no longer be cancelled'
+        });
+      }
+
+      // Already cancelled
+      if (reservation.status === 'CANCELLED') {
+        return res.status(400).json({
+          success: false,
+          message: 'This reservation is already cancelled'
+        });
+      }
+    }
+    // ADMIN has no restrictions - can update to any status
+
+    const updatedReservation = await ReservationService.updateReservationStatus(
       parseInt(id),
       status,
       userId
     );
 
     // Generate PDF on CONFIRMED
-    if (status === 'CONFIRMED' && !reservation.contractPdfUrl) {
+    if (status === 'CONFIRMED' && !updatedReservation.contractPdfUrl) {
       try {
         const contractPdfUrl = await generateContractPDF(
-          reservation,
-          reservation.vehicle,
-          reservation.user
+          updatedReservation,
+          updatedReservation.vehicle,
+          updatedReservation.user
         );
         await prisma.reservation.update({
           where: { id: parseInt(id) },
           data: { contractPdfUrl }
         });
-        reservation.contractPdfUrl = contractPdfUrl;
+        updatedReservation.contractPdfUrl = contractPdfUrl;
 
         // Send reservation confirmed email
-        const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+        const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
         await sendReservationConfirmed(
-          reservation.user.email,
-          `${reservation.user.firstName} ${reservation.user.lastName}`,
+          updatedReservation.user.email,
+          `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
           vehicleName,
-          reservation.startDate,
-          reservation.endDate,
-          reservation.contractNumber
+          updatedReservation.startDate,
+          updatedReservation.endDate,
+          updatedReservation.contractNumber
         );
       } catch (pdfError) {
         console.error('PDF generation failed:', pdfError.message);
@@ -198,32 +249,60 @@ export const updateReservationStatus = async (req, res) => {
 
     // Send car returned email on COMPLETED
     if (status === 'COMPLETED') {
-      const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+      const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
       const checkin = await prisma.checkin.findUnique({ where: { reservationId: parseInt(id) } });
       await sendCarReturned(
-        reservation.user.email,
-        `${reservation.user.firstName} ${reservation.user.lastName}`,
+        updatedReservation.user.email,
+        `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
         vehicleName,
-        reservation.contractNumber,
+        updatedReservation.contractNumber,
         checkin?.extraCharges || 0
       );
     }
 
     // Send cancellation email on CANCELLED
     if (status === 'CANCELLED') {
-      const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
+      const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
+      const wasConfirmed = reservation.status === 'CONFIRMED';
+      
+      // Send email to customer
       await sendReservationCancelled(
-        reservation.user.email,
-        `${reservation.user.firstName} ${reservation.user.lastName}`,
+        updatedReservation.user.email,
+        `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
         vehicleName,
-        reservation.startDate,
-        reservation.endDate,
-        reservation.contractNumber
+        updatedReservation.startDate,
+        updatedReservation.endDate,
+        updatedReservation.contractNumber
       );
+
+      // If reservation was confirmed and cancelled by customer, notify admin
+      if (wasConfirmed && userRole === 'CUSTOMER') {
+        try {
+          const admin = await prisma.user.findFirst({
+            where: { role: 'ADMIN' },
+            select: { email: true, firstName: true }
+          });
+          
+          if (admin) {
+            await sendAdminCancellationNotification(
+              admin.email,
+              admin.firstName,
+              `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
+              vehicleName,
+              updatedReservation.startDate,
+              updatedReservation.endDate,
+              updatedReservation.contractNumber,
+              updatedReservation.id
+            );
+          }
+        } catch (emailError) {
+          console.error('Failed to send admin notification:', emailError);
+        }
+      }
     }
 
     console.log('✅ Status updated successfully');
-    res.json(reservation);
+    res.json(updatedReservation);
   } catch (error) {
     console.error('❌ Status update failed:', error.message);
     res.status(error.statusCode || 400).json({ 
@@ -231,6 +310,41 @@ export const updateReservationStatus = async (req, res) => {
       message: error.message 
     });
   }
+};
+
+// Helper function for admin notification
+const sendAdminCancellationNotification = async (adminEmail, adminName, customerName, vehicleName, startDate, endDate, contractNumber, reservationId) => {
+  const nodemailer = await import('nodemailer');
+  const transporter = nodemailer.default.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: process.env.EMAIL_PORT || 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: adminEmail,
+    subject: 'Customer Cancelled a Confirmed Reservation',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #EF4444;">Customer Cancelled a Confirmed Reservation</h2>
+        <p>Hello ${adminName},</p>
+        <p>The following reservation has been cancelled by the customer.</p>
+        <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 8px 0;"><strong>Vehicle:</strong> ${vehicleName}</p>
+          <p style="margin: 8px 0;"><strong>Reservation ID:</strong> ${reservationId}</p>
+          <p style="margin: 8px 0;"><strong>Customer Name:</strong> ${customerName}</p>
+          <p style="margin: 8px 0;"><strong>Pickup Date:</strong> ${new Date(startDate).toLocaleDateString()}</p>
+          <p style="margin: 8px 0;"><strong>Return Date:</strong> ${new Date(endDate).toLocaleDateString()}</p>
+        </div>
+        <p>Please review the reservation in the admin panel.</p>
+      </div>
+    `
+  });
 };
 
 export const updatePaymentStatus = async (req, res) => {

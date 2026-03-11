@@ -91,8 +91,15 @@ const Customers = () => {
           <tbody className={`divide-y divide-gray-100 transition-opacity duration-150 ${
             isAnimating ? 'opacity-0' : 'opacity-100'
           }`}>
-            {paginatedCustomers.map(customer => (
-              <tr key={customer.id} className="hover:bg-gray-50 transition">
+            {paginatedCustomers.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                  No customers found
+                </td>
+              </tr>
+            ) : (
+              paginatedCustomers.map(customer => (
+                <tr key={customer.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold overflow-hidden">
@@ -142,7 +149,8 @@ const Customers = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

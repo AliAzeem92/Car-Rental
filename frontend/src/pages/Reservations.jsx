@@ -275,8 +275,15 @@ const Reservations = () => {
               isAnimating ? "opacity-0" : "opacity-100"
             }`}
           >
-            {paginatedReservations.map((reservation) => (
-              <tr key={reservation.id} className="hover:bg-gray-50 transition">
+            {paginatedReservations.length === 0 ? (
+              <tr>
+                <td colSpan="10" className="px-6 py-12 text-center text-gray-500">
+                  No reservations found
+                </td>
+              </tr>
+            ) : (
+              paginatedReservations.map((reservation) => (
+                <tr key={reservation.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
                   <span className="text-blue-600 text-xs ">
                     {reservation.contractNumber}
@@ -346,7 +353,8 @@ const Reservations = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

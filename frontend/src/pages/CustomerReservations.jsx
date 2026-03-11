@@ -2,12 +2,17 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Calendar, MapPin, Car, Clock, CheckCircle, ClockIcon, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, MapPin, Car, Clock, CheckCircle, ClockIcon, XCircle, AlertCircle, X } from "lucide-react";
 import { reservationAPI } from "../services/api";
+import { useToast } from "../context/ToastContext";
 
 const CustomerReservations = () => {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchReservations();
@@ -66,6 +71,36 @@ const CustomerReservations = () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleCancelClick = (reservation) => {
+    setSelectedReservation(reservation);
+    setShowConfirmModal(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!selectedReservation) return;
+
+    setCancellingId(selectedReservation.id);
+    try {
+      await reservationAPI.updateStatus(selectedReservation.id, 'CANCELLED');
+      
+      setReservations(prevReservations =>
+        prevReservations.map(res =>
+          res.id === selectedReservation.id
+            ? { ...res, status: 'CANCELLED' }
+            : res
+        )
+      );
+      
+      showToast('Reservation cancelled successfully', 'success');
+    } catch (error) {
+      showToast('Failed to cancel reservation', 'error');
+    } finally {
+      setCancellingId(null);
+      setShowConfirmModal(false);
+      setSelectedReservation(null);
+    }
   };
 
   if (loading) {
@@ -169,10 +204,22 @@ const CustomerReservations = () => {
                       </div>
                     </div>
 
-                    <span className={getStatusBadge(reservation.status)}>
-                      {getStatusIcon(reservation.status)}
-                      {reservation.status}
-                    </span>
+                    <div className="flex flex-col items-end gap-3">
+                      <span className={getStatusBadge(reservation.status)}>
+                        {getStatusIcon(reservation.status)}
+                        {reservation.status}
+                      </span>
+                      {(reservation.status === 'PENDING' || reservation.status === 'CONFIRMED') && (
+                        <button
+                          onClick={() => handleCancelClick(reservation)}
+                          disabled={cancellingId === reservation.id}
+                          className="bg-red-500 hover:bg-red-600 text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          <X className="h-4 w-4" />
+                          {cancellingId === reservation.id ? 'Cancelling...' : 'Cancel Reservation'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
@@ -233,6 +280,42 @@ const CustomerReservations = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Cancel Reservation</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to cancel this reservation? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelConfirm}
+                disabled={cancellingId !== null}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancellingId ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setSelectedReservation(null);
+                }}
+                disabled={cancellingId !== null}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                No, Keep It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

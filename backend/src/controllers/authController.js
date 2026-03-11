@@ -54,9 +54,58 @@ export const checkAuth = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, role: true, firstName: true, lastName: true, profileImageUrl: true }
+      select: { 
+        id: true, 
+        email: true, 
+        role: true, 
+        firstName: true, 
+        lastName: true, 
+        profileImageUrl: true,
+        phone: true,
+        address: true,
+        licenseNumber: true,
+        licenseExpiryDate: true
+      }
     });
     res.json({ user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { firstName, lastName, phone, address, licenseNumber, licenseExpiryDate } = req.body;
+    const userId = req.userId;
+
+    const updateData = {};
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (phone !== undefined) updateData.phone = phone;
+    if (address !== undefined) updateData.address = address;
+    if (licenseNumber !== undefined) updateData.licenseNumber = licenseNumber;
+    if (licenseExpiryDate !== undefined) {
+      updateData.licenseExpiryDate = licenseExpiryDate ? new Date(licenseExpiryDate) : null;
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        address: true,
+        licenseNumber: true,
+        licenseExpiryDate: true,
+        profileImageUrl: true
+      }
+    });
+
+    res.json({ message: 'Profile updated successfully', user });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

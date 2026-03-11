@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/', authenticate, getReservations);
 router.post('/', bookingLimiter, authenticate, createReservation);
 router.get('/:id/available-transitions', authenticate, getAvailableStatusTransitions);
-router.put('/:id/status', authenticate, requireAdmin, updateReservationStatus);
+router.put('/:id/status', authenticate, updateReservationStatus);
 router.put('/:id/payment-status', authenticate, requireAdmin, updatePaymentStatus);
 router.post('/:id/checkin', authenticate, requireAdmin, upload.single('signature'), checkIn);
 router.post('/:id/checkout', authenticate, requireAdmin, upload.single('signature'), checkOut);

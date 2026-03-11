@@ -26,6 +26,7 @@ const Navbar = () => {
 
     if (isAuthenticated && userRole === "CUSTOMER") {
       baseItems.push({ name: "Reservations", path: "/reservations" });
+      baseItems.push({ name: "Profile", path: "/profile" });
     }
 
     baseItems.push({ name: "About", path: "/about" });

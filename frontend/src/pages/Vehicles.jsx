@@ -357,11 +357,18 @@ const Vehicles = () => {
               isAnimating ? "opacity-0" : "opacity-100"
             }`}
           >
-            {paginatedVehicles.map((vehicle) => (
-              <tr
-                key={vehicle.id}
-                className={`hover:bg-gray-50 transition ${!vehicle.isAvailable ? "opacity-50 bg-gray-300 " : ""}`}
-              >
+            {paginatedVehicles.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                  No vehicles available
+                </td>
+              </tr>
+            ) : (
+              paginatedVehicles.map((vehicle) => (
+                <tr
+                  key={vehicle.id}
+                  className={`hover:bg-gray-50 transition ${!vehicle.isAvailable ? "opacity-50 bg-gray-300 " : ""}`}
+                >
                 <td className="px-6 py-4">
                   <div className="w-20 h-16 bg-gray-200 rounded-lg overflow-hidden shadow-sm">
                     {vehicle.vehicleimage?.[0] ? (
@@ -429,7 +436,8 @@ const Vehicles = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

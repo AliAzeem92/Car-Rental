@@ -15,6 +15,10 @@ const Settings = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
+    address: "",
+    licenseNumber: "",
+    licenseExpiryDate: "",
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -30,6 +34,12 @@ const Settings = () => {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        licenseNumber: user.licenseNumber || "",
+        licenseExpiryDate: user.licenseExpiryDate
+          ? new Date(user.licenseExpiryDate).toISOString().split("T")[0]
+          : "",
       });
       if (user.profileImageUrl) {
         setImagePreview(user.profileImageUrl);
@@ -63,10 +73,13 @@ const Settings = () => {
       const updateData = {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
-        email: profileData.email,
+        phone: profileData.phone,
+        address: profileData.address,
+        licenseNumber: profileData.licenseNumber,
+        licenseExpiryDate: profileData.licenseExpiryDate,
       };
 
-      await api.put(`/customers/${user.id}`, updateData);
+      await api.put(`/auth/profile`, updateData);
       showToast("Profile updated successfully", "success");
 
       if (profileImage) {
@@ -205,6 +218,7 @@ const Settings = () => {
                   </div>
                 </div>
               </div>
+              <div className="flex items-start gap-6 mb-6"></div>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
@@ -212,11 +226,88 @@ const Settings = () => {
                 <input
                   type="email"
                   value={profileData.email}
-                  onChange={(e) =>
-                    setProfileData({ ...profileData, email: e.target.value })
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-100 cursor-not-allowed"
                 />
+              </div>
+              {/* <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={profileData.email}
+                  disabled
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 bg-gray-100 cursor-not-allowed"
+                />
+              </div> */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.phone}
+                    onChange={(e) =>
+                      setProfileData({ ...profileData, phone: e.target.value })
+                    }
+                    placeholder="+92 300 1234567"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    License Number
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.licenseNumber}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        licenseNumber: e.target.value,
+                      })
+                    }
+                    placeholder="ABC-123456"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Address
+                  </label>
+                  <textarea
+                    value={profileData.address}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        address: e.target.value,
+                      })
+                    }
+                    placeholder="Enter your address"
+                    rows="3"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    License Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    value={profileData.licenseExpiryDate}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        licenseExpiryDate: e.target.value,
+                      })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
               <div className="flex justify-end">
                 <button

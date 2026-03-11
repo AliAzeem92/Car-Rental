@@ -4,6 +4,7 @@ import { useToast } from "../context/ToastContext";
 import Modal from "../components/Modal";
 import Button from "../components/Button";
 import ConfirmModal from "../components/ConfirmModal";
+import Loader from "../components/ui/Loader";
 import { vehicleAPI, maintenanceAPI } from "../services/api";
 
 const Maintenance = () => {
@@ -168,7 +169,14 @@ const Maintenance = () => {
     });
 
   const renderTable = (items, title, showActions = true) => {
-    if (items.length === 0) return null;
+    if (items.length === 0 && statusFilter === "All") return null;
+    if (items.length === 0) {
+      return (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <p className="text-center text-gray-500">No {title.toLowerCase()} available</p>
+        </div>
+      );
+    }
 
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
@@ -362,11 +370,7 @@ const Maintenance = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
+    return <Loader className="h-64" />;
   }
 
   return (
@@ -436,9 +440,17 @@ const Maintenance = () => {
 
       {statusFilter === "All" ? (
         <>
-          {renderTable(pending, "Overdue Alerts")}
-          {renderTable(upcoming, "Upcoming Maintenance")}
-          {renderTable(completed, "Completed Maintenance", false)}
+          {pending.length === 0 && upcoming.length === 0 && completed.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+              <p className="text-center text-gray-500">No maintenance available</p>
+            </div>
+          ) : (
+            <>
+              {renderTable(pending, "Overdue Alerts")}
+              {renderTable(upcoming, "Upcoming Maintenance")}
+              {renderTable(completed, "Completed Maintenance", false)}
+            </>
+          )}
         </>
       ) : (
         renderTable(

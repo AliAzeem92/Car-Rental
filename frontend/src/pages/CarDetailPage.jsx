@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { carService } from '../services/carService';
-import { Users, Fuel, Settings, Calendar, MapPin, Star, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import api from '../services/api';
+import { Users, Fuel, Settings, Calendar, MapPin, Star, ArrowLeft, ChevronLeft, ChevronRight, Phone, Mail } from 'lucide-react';
 
 const CarDetailPage = () => {
   const { id } = useParams();
@@ -12,10 +13,21 @@ const CarDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [contactInfo, setContactInfo] = useState(null);
 
   useEffect(() => {
     fetchCarDetails();
+    fetchContactInfo();
   }, [id]);
+
+  const fetchContactInfo = async () => {
+    try {
+      const response = await api.get('/public/admin-contact');
+      setContactInfo(response.data);
+    } catch (error) {
+      console.error('Error fetching contact info:', error);
+    }
+  };
 
   const fetchCarDetails = async () => {
     try {
@@ -231,6 +243,52 @@ const CarDetailPage = () => {
                 <p className="text-[#6d6e71] leading-relaxed text-lg whitespace-pre-line">
                   {car.description}
                 </p>
+              </div>
+            )}
+
+            {/* Contact Us */}
+            {contactInfo && (
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h3 className="text-2xl font-bold text-[#192336] mb-6">Contact Us</h3>
+                <div className="space-y-4">
+                  {contactInfo.phoneNumber && (
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-green-100 rounded-xl">
+                        <Phone className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-[#6d6e71]">WhatsApp</p>
+                        <a
+                          href={`https://wa.me/${contactInfo.phoneNumber.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-[#192336] text-lg hover:text-green-600 transition-colors"
+                        >
+                          {contactInfo.phoneNumber}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {contactInfo.email && (
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-blue-100 rounded-xl">
+                        <Mail className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-[#6d6e71]">Email</p>
+                        <a
+                          href={`mailto:${contactInfo.email}`}
+                          className="font-semibold text-[#192336] text-lg hover:text-blue-600 transition-colors"
+                        >
+                          {contactInfo.email}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {!contactInfo.phoneNumber && !contactInfo.email && (
+                    <p className="text-[#6d6e71] text-center py-4">Contact information unavailable</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

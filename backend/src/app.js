@@ -12,6 +12,7 @@ import planningRoutes from './routes/planningRoutes.js';
 import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import checkInOutRoutes from './routes/checkInOutRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // API routes
+app.use('/api/public', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/customer/auth', customerAuthRoutes);
 app.use('/api/vehicles', vehicleRoutes);
