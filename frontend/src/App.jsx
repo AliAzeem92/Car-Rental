@@ -19,6 +19,7 @@ import Customers from './pages/Customers';
 import Maintenance from './pages/Maintenance';
 import Settings from './pages/Settings';
 import CustomerPortal from './pages/CustomerPortal';
+import CustomerDashboard from './pages/CustomerDashboard';
 
 // Customer-facing pages
 import Home from './pages/Home';
@@ -81,6 +82,11 @@ function App() {
                 <Route path="/customer/portal" element={
                   <CustomerRoute>
                     <CustomerPortal />
+                  </CustomerRoute>
+                } />
+                <Route path="/customer/dashboard" element={
+                  <CustomerRoute>
+                    <CustomerDashboard />
                   </CustomerRoute>
                 } />
                 
