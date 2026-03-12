@@ -317,7 +317,7 @@ const CustomerReservations = () => {
         </div>
       )}
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

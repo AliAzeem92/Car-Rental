@@ -1,2 +1,9 @@
 # UI Designs
 ui-design/
+
+node_modules/
+.env
+*.zip
+*.log
+dist/
+build/
