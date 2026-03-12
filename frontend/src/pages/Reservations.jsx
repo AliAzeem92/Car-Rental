@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Search, Grid, X, Calendar, Plus, Eye, Edit, Download } from "lucide-react";
+import {
+  Search,
+  Grid,
+  X,
+  Calendar,
+  Plus,
+  Eye,
+  Edit,
+  Download,
+} from "lucide-react";
 import {
   reservationAPI,
   vehicleAPI,
@@ -78,8 +87,8 @@ const Reservations = () => {
 
   const handleStatusChange = async (id, status, type) => {
     const loadingKey = `${id}-${type}`;
-    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
-    
+    setLoadingStates((prev) => ({ ...prev, [loadingKey]: true }));
+
     try {
       if (type === "payment") {
         await reservationAPI.updatePaymentStatus(id, status);
@@ -101,7 +110,7 @@ const Reservations = () => {
         error.response?.data?.message || "Failed to update status";
       showToast(message, "error");
     } finally {
-      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
+      setLoadingStates((prev) => ({ ...prev, [loadingKey]: false }));
     }
   };
 
@@ -118,27 +127,30 @@ const Reservations = () => {
 
   const handleDownloadInvoice = async (reservationId) => {
     try {
-      const response = await fetch(`/api/invoices/reservations/${reservationId}/invoice`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to generate invoice');
-      
+      const response = await fetch(
+        `/api/invoices/reservations/${reservationId}/invoice`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error("Failed to generate invoice");
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `invoice-${reservationId}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
-      showToast('Invoice downloaded successfully', 'success');
+
+      showToast("Invoice downloaded successfully", "success");
     } catch (error) {
-      showToast('Failed to download invoice', 'error');
+      showToast("Failed to download invoice", "error");
     }
   };
 
@@ -277,82 +289,89 @@ const Reservations = () => {
           >
             {paginatedReservations.length === 0 ? (
               <tr>
-                <td colSpan="10" className="px-6 py-12 text-center text-gray-500">
+                <td
+                  colSpan="10"
+                  className="px-6 py-12 text-center text-gray-500"
+                >
                   No reservations found
                 </td>
               </tr>
             ) : (
               paginatedReservations.map((reservation) => (
-                <tr key={reservation.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <span className="text-blue-600 text-xs ">
-                    {reservation.contractNumber}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-gray-800 text-xs">
-                  {reservation.user?.firstName} {reservation.user?.lastName}
-                </td>
-                <td className="px-6 py-4 text-gray-800 text-xs">
-                  {reservation.vehicle?.brand} {reservation.vehicle?.model}
-                </td>
-                <td className="px-6 py-4 text-gray-800 text-xs">
-                  {formatDate(reservation.startDate)}
-                </td>
-                <td className="px-6 py-4 text-gray-800 text-xs">
-                  {formatDate(reservation.endDate)}
-                </td>
-                <td className="px-6 py-4 text-gray-800 text-xs text-center">
-                  {calculateDays(reservation.startDate, reservation.endDate)}
-                </td>
-                <td className="px-6 py-4 text-blue-600 text-xs font-semibold">
-                  €{reservation.totalPrice.toFixed(2)}
-                </td>
-                <td className="px-6 py-4">
-                  <StatusDropdown
-                    value={reservation.paymentStatus || "UNPAID"}
-                    onChange={handleStatusChange}
-                    reservationId={reservation.id}
-                    type="payment"
-                    loading={loadingStates[`${reservation.id}-payment`]}
-                  />
-                </td>
-                <td className="px-6 py-4">
-                  <StatusDropdown
-                    value={reservation.status}
-                    onChange={handleStatusChange}
-                    reservationId={reservation.id}
-                    width="w-[113px]"
-                    loading={loadingStates[`${reservation.id}-status`]}
-                  />
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setViewModal(reservation)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition"
-                      title="View Details"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => setEditModal(reservation)}
-                      className="border border-gray-300 hover:bg-gray-50 text-gray-700 p-2 rounded-lg transition"
-                      title="Edit"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    {(reservation.status === 'CONFIRMED' || reservation.status === 'COMPLETED') && (
+                <tr
+                  key={reservation.id}
+                  className="hover:bg-gray-50 transition"
+                >
+                  <td className="px-6 py-4">
+                    <span className="text-blue-600 text-xs ">
+                      {reservation.contractNumber}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 text-xs">
+                    {reservation.user?.firstName} {reservation.user?.lastName}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 text-xs">
+                    {reservation.vehicle?.brand} {reservation.vehicle?.model}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 text-xs">
+                    {formatDate(reservation.startDate)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 text-xs">
+                    {formatDate(reservation.endDate)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 text-xs text-center">
+                    {calculateDays(reservation.startDate, reservation.endDate)}
+                  </td>
+                  <td className="px-6 py-4 text-blue-600 text-xs font-semibold">
+                    €{reservation.totalPrice.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <StatusDropdown
+                      value={reservation.paymentStatus || "UNPAID"}
+                      onChange={handleStatusChange}
+                      reservationId={reservation.id}
+                      type="payment"
+                      loading={loadingStates[`${reservation.id}-payment`]}
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    <StatusDropdown
+                      value={reservation.status}
+                      onChange={handleStatusChange}
+                      reservationId={reservation.id}
+                      width="w-[113px]"
+                      loading={loadingStates[`${reservation.id}-status`]}
+                    />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleDownloadInvoice(reservation.id)}
-                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition"
-                        title="Download Invoice"
+                        onClick={() => setViewModal(reservation)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition"
+                        title="View Details"
                       >
-                        <Download className="w-4 h-4" />
+                        <Eye className="w-4 h-4" />
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
+                      <button
+                        onClick={() => setEditModal(reservation)}
+                        className="border border-gray-300 hover:bg-gray-50 text-gray-700 p-2 rounded-lg transition"
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      {(reservation.status === "CONFIRMED" ||
+                        reservation.status === "COMPLETED") && (
+                        <button
+                          onClick={() => handleDownloadInvoice(reservation.id)}
+                          className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition"
+                          title="Download Invoice"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
               ))
             )}
           </tbody>
@@ -542,9 +561,19 @@ const Reservations = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">
-                  Destination
+                  Pickup Location
                 </label>
-                <p className="text-gray-900">{viewModal.destination || 'N/A'}</p>
+                <p className="text-gray-900">
+                  {viewModal.pickupLocation || viewModal.destination || "N/A"}
+                </p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600">
+                  Return Location
+                </label>
+                <p className="text-gray-900">
+                  {viewModal.returnLocation || viewModal.destination || "N/A"}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">
@@ -567,7 +596,7 @@ const Reservations = () => {
                   Extra Charges
                 </label>
                 <p className="text-gray-900 font-semibold">
-                  €{viewModal.checkin?.extraCharges?.toFixed(2) || '0.00'}
+                  €{viewModal.checkin?.extraCharges?.toFixed(2) || "0.00"}
                 </p>
               </div>
               <div className="col-span-2">
@@ -575,7 +604,11 @@ const Reservations = () => {
                   Final Total Price
                 </label>
                 <p className="text-blue-600 text-xl font-bold">
-                  €{(viewModal.totalPrice + (viewModal.checkin?.extraCharges || 0)).toFixed(2)}
+                  €
+                  {(
+                    viewModal.totalPrice +
+                    (viewModal.checkin?.extraCharges || 0)
+                  ).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -600,7 +633,7 @@ const Reservations = () => {
                       Extra Charges
                     </label>
                     <p className="text-gray-900">
-                      €{viewModal.checkin.extraCharges?.toFixed(2) || '0.00'}
+                      €{viewModal.checkin.extraCharges?.toFixed(2) || "0.00"}
                     </p>
                   </div>
                   <div className="col-span-2">
@@ -608,7 +641,7 @@ const Reservations = () => {
                       Damage Report
                     </label>
                     <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
-                      {viewModal.checkin.damageReport || 'No damage reported'}
+                      {viewModal.checkin.damageReport || "No damage reported"}
                     </p>
                   </div>
                 </div>

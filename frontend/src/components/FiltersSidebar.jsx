@@ -97,7 +97,7 @@ const FiltersSidebar = ({ categories = [] }) => {
                   setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004aad] focus:border-transparent text-sm"
-                placeholder="$30"
+                placeholder="$0"
               />
             </div>
             <div className="flex-1">
@@ -121,7 +121,7 @@ const FiltersSidebar = ({ categories = [] }) => {
           <div className="relative">
             <input
               type="range"
-              min="30"
+              min="0"
               max="500"
               value={priceRange[0]}
               onChange={(e) =>
@@ -132,7 +132,7 @@ const FiltersSidebar = ({ categories = [] }) => {
             />
             <input
               type="range"
-              min="30"
+              min="0"
               max="500"
               value={priceRange[1]}
               onChange={(e) =>

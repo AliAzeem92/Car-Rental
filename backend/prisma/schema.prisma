@@ -99,6 +99,8 @@ model reservation {
   startDate            DateTime
   endDate              DateTime
   destination          String?
+  pickupLocation       String?
+  returnLocation       String?
   totalPrice           Float
   depositPaid          Float
   paymentStatus        payment_status             @default(UNPAID)

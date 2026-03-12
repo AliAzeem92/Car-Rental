@@ -1,9 +1,23 @@
 # UI Designs
 ui-design/
 
+# Node modules
 node_modules/
+
+# Environment files
 .env
-*.zip
-*.log
-dist/
+
+# Build folders
 build/
+dist/
+
+# Logs
+*.log
+
+# Large files
+*.zip
+*.tar
+*.rar
+*.mp4
+*.mov
+*.exe
