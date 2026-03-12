@@ -34,6 +34,7 @@ import CarDetailsModal from "../components/CarDetailsModal";
 import BookingModal from "../components/BookingModal";
 import CustomerNavbar from "../components/CustomerNavbar";
 import { compressImage } from "../utils/imageCompression";
+import { useTranslation } from "react-i18next";
 
 /* ─── Shared Spinner ──────────────────────────────────────────── */
 const Spinner = ({ size = "h-10 w-10" }) => (
@@ -45,49 +46,52 @@ const Spinner = ({ size = "h-10 w-10" }) => (
 );
 
 /* ─── Confirmation Modal ─────────────────────────────────────── */
-const ConfirmCancelModal = ({ reservation, onConfirm, onClose, isLoading }) => (
+const ConfirmCancelModal = ({ reservation, onConfirm, onClose, isLoading }) => {
+  const { t } = useTranslation();
+  return (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-3 bg-red-100 rounded-full">
           <AlertCircle className="h-6 w-6 text-red-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Cancel Reservation</h3>
+        <h3 className="text-xl font-bold text-gray-900">{t('modals.cancelReservation')}</h3>
       </div>
       <p className="text-gray-600 mb-2">
-        Are you sure you want to cancel this reservation?
+        {t('modals.cancelConfirmation')}
       </p>
       {reservation && (
         <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm text-gray-700 space-y-1">
           <p>
-            <span className="font-medium">Car:</span>{" "}
+            <span className="font-medium">{t('modals.car')}:</span>{" "}
             {reservation.vehicle?.brand} {reservation.vehicle?.model}
           </p>
           <p>
-            <span className="font-medium">Reservation #:</span> {reservation.id}
+            <span className="font-medium">{t('reservations.reservationNumber')}:</span> {reservation.id}
           </p>
         </div>
       )}
-      <p className="text-sm text-red-600 mb-6">This action cannot be undone.</p>
+      <p className="text-sm text-red-600 mb-6">{t('modals.cannotUndo')}</p>
       <div className="flex gap-3">
         <button
           onClick={onConfirm}
           disabled={isLoading}
           className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Cancelling..." : "Yes, Cancel"}
+          {isLoading ? t('reservations.cancelling') : t('buttons.yesCancel')}
         </button>
         <button
           onClick={onClose}
           disabled={isLoading}
           className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
         >
-          No, Keep It
+          {t('buttons.noKeepIt')}
         </button>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ─── Main Component ─────────────────────────────────────────── */
 const CustomerDashboard = () => {
@@ -96,6 +100,7 @@ const CustomerDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { filters } = useFilter();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const activeTab = searchParams.get("tab") || "vehicles";
   const prevTabRef = useRef(activeTab);
@@ -278,13 +283,13 @@ const CustomerDashboard = () => {
         licenseExpiryDate: profileData.licenseExpiryDate,
       });
 
-      showToast("Profile updated successfully", "success");
+      showToast(t('profile.profileUpdated'), "success");
       if (profileImage) {
         setTimeout(() => window.location.reload(), 500);
       }
     } catch (error) {
       showToast(
-        error.response?.data?.error || "Failed to update profile",
+        error.response?.data?.error || t('messages.failedToUpdate'),
         "error",
       );
     } finally {
@@ -296,11 +301,11 @@ const CustomerDashboard = () => {
     e.preventDefault();
     e.stopPropagation();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showToast("Passwords do not match", "error");
+      showToast(t('profile.passwordsDoNotMatch'), "error");
       return;
     }
     if (!passwordData.currentPassword || !passwordData.newPassword) {
-      showToast("Please fill all password fields", "error");
+      showToast(t('profile.fillAllFields'), "error");
       return;
     }
     setSavingPassword(true);
@@ -309,7 +314,7 @@ const CustomerDashboard = () => {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
       });
-      showToast("Password changed successfully", "success");
+      showToast(t('profile.passwordChanged'), "success");
       setPasswordData({
         currentPassword: "",
         newPassword: "",
@@ -317,7 +322,7 @@ const CustomerDashboard = () => {
       });
     } catch (error) {
       showToast(
-        error.response?.data?.error || "Failed to change password",
+        error.response?.data?.error || t('messages.failedToChangePassword'),
         "error",
       );
     } finally {
@@ -341,9 +346,9 @@ const CustomerDashboard = () => {
           r.id === selectedReservation.id ? { ...r, status: "CANCELLED" } : r,
         ),
       );
-      showToast("Reservation cancelled successfully", "success");
+      showToast(t('messages.reservationCancelled'), "success");
     } catch (error) {
-      showToast("Failed to cancel reservation", "error");
+      showToast(t('messages.failedToCancel'), "error");
     } finally {
       setCancellingId(null);
       setShowConfirmModal(false);
@@ -433,7 +438,7 @@ const CustomerDashboard = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-14 w-14 border-4 border-gray-200 border-t-[#004aad] mx-auto mb-4" />
             <p className="text-[#192336] font-semibold text-lg">
-              Loading dashboard…
+              {t('dashboard.loadingDashboard')}
             </p>
           </div>
         </div>
@@ -449,13 +454,13 @@ const CustomerDashboard = () => {
       <div className="bg-white border-b border-gray-200 py-4">
         <div className="max-w-[1600px] mx-auto px-6">
           <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="font-semibold text-[#004aad]">Search</span>
+            <span className="font-semibold text-[#004aad]">{t('steps.search')}</span>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600">Select Car</span>
+            <span className="text-gray-600">{t('steps.selectCar')}</span>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600">Checkout</span>
+            <span className="text-gray-600">{t('steps.checkout')}</span>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-600">Confirmation</span>
+            <span className="text-gray-600">{t('steps.confirmation')}</span>
           </div>
         </div>
       </div>
@@ -479,10 +484,10 @@ const CustomerDashboard = () => {
               <div className="h-[calc(100vh-180px)] overflow-y-auto pr-4 pb-8">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-[#192336] mb-1">
-                    Available Vehicles
+                    {t('dashboard.availableVehicles')}
                   </h2>
                   <p className="text-gray-600">
-                    {filteredVehicles.length} cars found
+                    {filteredVehicles.length} {t('dashboard.carsFound')}
                   </p>
                 </div>
 
@@ -528,7 +533,7 @@ const CustomerDashboard = () => {
                             <span className="text-2xl font-bold text-[#192336]">
                               ${car.dailyPrice}
                             </span>
-                            <span className="text-gray-600">/day</span>
+                            <span className="text-gray-600">{t('vehicles.perDay')}</span>
                           </div>
                           <div className="flex gap-2">
                             <button
@@ -538,7 +543,7 @@ const CustomerDashboard = () => {
                               }}
                               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
                             >
-                              View Details
+                              {t('buttons.viewDetails')}
                             </button>
                             <button
                               onClick={() => {
@@ -551,7 +556,7 @@ const CustomerDashboard = () => {
                               }}
                               className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003a8c] transition-colors text-sm font-medium"
                             >
-                              Reserve
+                              {t('buttons.reserve')}
                             </button>
                           </div>
                         </div>
@@ -563,7 +568,7 @@ const CustomerDashboard = () => {
                 {filteredVehicles.length === 0 && (
                   <div className="text-center py-20 bg-white rounded-xl">
                     <p className="text-xl text-gray-600">
-                      No vehicles match your filters
+                      {t('dashboard.noVehiclesMatch')}
                     </p>
                   </div>
                 )}
@@ -573,7 +578,7 @@ const CustomerDashboard = () => {
               <div className="hidden xl:block sticky top-24 self-start space-y-6">
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h3 className="text-lg font-bold text-[#192336] mb-4">
-                    Your Reservations
+                    {t('sidebar.yourReservations')}
                   </h3>
                   {loadingReservations ? (
                     <div className="flex justify-center py-4">
@@ -606,7 +611,7 @@ const CustomerDashboard = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-600">
-                          Status
+                          {t('reservations.status')}
                         </span>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
@@ -618,13 +623,13 @@ const CustomerDashboard = () => {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-600 text-sm">No reservations yet</p>
+                    <p className="text-gray-600 text-sm">{t('sidebar.noReservationsYet')}</p>
                   )}
                 </div>
 
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h3 className="text-lg font-bold text-[#192336] mb-4">
-                    Need Help?
+                    {t('modals.needHelp')}
                   </h3>
                   <div className="space-y-3">
                     {contactInfo?.phoneNumber && (
@@ -639,7 +644,7 @@ const CustomerDashboard = () => {
                         </div>
                         <div>
                           <p className="font-medium text-[#192336]">
-                            Call Support
+                            {t('modals.callSupport')}
                           </p>
                           <p className="text-sm text-gray-600">
                             {contactInfo.phoneNumber}
@@ -652,8 +657,8 @@ const CustomerDashboard = () => {
                         <MessageCircle className="w-5 h-5 text-blue-600" />
                       </div>
                       <div className="text-left">
-                        <p className="font-medium text-[#192336]">Live Chat</p>
-                        <p className="text-sm text-gray-600">Chat with us</p>
+                        <p className="font-medium text-[#192336]">{t('modals.liveChat')}</p>
+                        <p className="text-sm text-gray-600">{t('modals.chatWithUs')}</p>
                       </div>
                     </button>
                     {contactInfo?.email && (
@@ -666,7 +671,7 @@ const CustomerDashboard = () => {
                         </div>
                         <div>
                           <p className="font-medium text-[#192336]">
-                            Email Support
+                            {t('modals.emailSupport')}
                           </p>
                           <p className="text-sm text-gray-600">
                             {contactInfo.email}
@@ -686,7 +691,7 @@ const CustomerDashboard = () => {
           {activeTab === "reservations" && (
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-[#192336] mb-8">
-                My Reservations
+                {t('reservations.title')}
               </h2>
 
               {loadingReservations ? (
@@ -695,16 +700,16 @@ const CustomerDashboard = () => {
                 <div className="text-center py-20 bg-white rounded-xl shadow-md">
                   <div className="text-6xl mb-6">🚗</div>
                   <h3 className="text-2xl font-bold text-[#192336] mb-4">
-                    No Reservations Yet
+                    {t('reservations.noReservations')}
                   </h3>
                   <p className="text-gray-600 mb-8">
-                    You have no reservations yet. Start exploring our cars.
+                    {t('reservations.noReservationsText')}
                   </p>
                   <button
                     onClick={() => changeTab("vehicles")}
                     className="bg-[#d9b15c] hover:bg-[#c4a052] text-white font-bold py-3 px-8 rounded-lg transition-colors"
                   >
-                    Browse Cars
+                    {t('buttons.browseCars')}
                   </button>
                 </div>
               ) : (
@@ -736,7 +741,7 @@ const CustomerDashboard = () => {
                                 {res.vehicle?.brand} {res.vehicle?.model}
                               </h3>
                               <p className="text-gray-500 text-sm">
-                                Reservation #{res.id}
+                                {t('reservations.reservationNumber')}{res.id}
                               </p>
                             </div>
                           </div>
@@ -755,8 +760,8 @@ const CustomerDashboard = () => {
                               >
                                 <X className="h-4 w-4" />
                                 {cancellingId === res.id
-                                  ? "Cancelling…"
-                                  : "Cancel Reservation"}
+                                  ? t('reservations.cancelling')
+                                  : t('reservations.cancelReservation')}
                               </button>
                             )}
                           </div>
@@ -770,7 +775,7 @@ const CustomerDashboard = () => {
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">
-                                Pickup Date
+                                {t('reservations.pickupDate')}
                               </p>
                               <p className="font-semibold text-[#192336]">
                                 {formatDate(res.startDate)}
@@ -784,7 +789,7 @@ const CustomerDashboard = () => {
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">
-                                Return Date
+                                {t('reservations.returnDate')}
                               </p>
                               <p className="font-semibold text-[#192336]">
                                 {formatDate(res.endDate)}
@@ -798,10 +803,10 @@ const CustomerDashboard = () => {
                             </div>
                             <div>
                               <p className="text-xs text-gray-500">
-                                Destination
+                                {t('reservations.destination')}
                               </p>
                               <p className="font-semibold text-[#192336]">
-                                {res.destination || "Not specified"}
+                                {res.destination || t('reservations.notSpecified')}
                               </p>
                             </div>
                           </div>
@@ -811,13 +816,13 @@ const CustomerDashboard = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 border-t border-gray-100 gap-3">
                           <div className="flex items-center gap-2 text-gray-500 text-sm">
                             <Clock className="h-4 w-4" />
-                            <span>Booked on {formatDate(res.createdAt)}</span>
+                            <span>{t('reservations.bookedOn')} {formatDate(res.createdAt)}</span>
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-extrabold text-[#192336]">
                               ${res.totalPrice}
                             </p>
-                            <p className="text-xs text-gray-500">Total Price</p>
+                            <p className="text-xs text-gray-500">{t('reservations.totalPrice')}</p>
                           </div>
                         </div>
                       </div>
@@ -834,7 +839,7 @@ const CustomerDashboard = () => {
           {activeTab === "profile" && (
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-[#192336] mb-8">
-                My Profile
+                {t('profile.title')}
               </h2>
 
               {loadingProfile ? (
@@ -844,7 +849,7 @@ const CustomerDashboard = () => {
                   {/* ── LEFT: Customer Information ─────────────── */}
                   <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
                     <h3 className="text-xl font-bold text-[#192336] mb-6">
-                      Customer Information
+                      {t('profile.customerInformation')}
                     </h3>
 
                     {/* Avatar */}
@@ -886,7 +891,7 @@ const CustomerDashboard = () => {
                         <div>
                           <label className={labelCls}>
                             <User className="w-4 h-4 inline mr-1.5" />
-                            First Name
+                            {t('profile.firstName')}
                           </label>
                           <input
                             type="text"
@@ -904,7 +909,7 @@ const CustomerDashboard = () => {
                         <div>
                           <label className={labelCls}>
                             <User className="w-4 h-4 inline mr-1.5" />
-                            Last Name
+                            {t('profile.lastName')}
                           </label>
                           <input
                             type="text"
@@ -924,7 +929,7 @@ const CustomerDashboard = () => {
                       <div>
                         <label className={labelCls}>
                           <Mail className="w-4 h-4 inline mr-1.5" />
-                          Email (Read-only)
+                          {t('profile.email')}
                         </label>
                         <input
                           type="email"
@@ -937,7 +942,7 @@ const CustomerDashboard = () => {
                       <div>
                         <label className={labelCls}>
                           <Phone className="w-4 h-4 inline mr-1.5" />
-                          Phone Number
+                          {t('profile.phone')}
                         </label>
                         <input
                           type="tel"
@@ -948,7 +953,7 @@ const CustomerDashboard = () => {
                               phone: e.target.value,
                             })
                           }
-                          placeholder="+1 555 123 4567"
+                          placeholder={t('profile.phonePlaceholder')}
                           className={inputCls}
                         />
                       </div>
@@ -956,7 +961,7 @@ const CustomerDashboard = () => {
                       <div>
                         <label className={labelCls}>
                           <MapPin className="w-4 h-4 inline mr-1.5" />
-                          Address
+                          {t('profile.address')}
                         </label>
                         <textarea
                           value={profileData.address}
@@ -966,7 +971,7 @@ const CustomerDashboard = () => {
                               address: e.target.value,
                             })
                           }
-                          placeholder="Enter your address"
+                          placeholder={t('profile.addressPlaceholder')}
                           rows={3}
                           className={inputCls}
                         />
@@ -976,7 +981,7 @@ const CustomerDashboard = () => {
                         <div>
                           <label className={labelCls}>
                             <CreditCard className="w-4 h-4 inline mr-1.5" />
-                            License Number
+                            {t('profile.licenseNumber')}
                           </label>
                           <input
                             type="text"
@@ -987,14 +992,14 @@ const CustomerDashboard = () => {
                                 licenseNumber: e.target.value,
                               })
                             }
-                            placeholder="ABC-123456"
+                            placeholder={t('profile.licensePlaceholder')}
                             className={inputCls}
                           />
                         </div>
                         <div>
                           <label className={labelCls}>
                             <Calendar className="w-4 h-4 inline mr-1.5" />
-                            License Expiry
+                            {t('profile.licenseExpiry')}
                           </label>
                           <input
                             type="date"
@@ -1018,12 +1023,12 @@ const CustomerDashboard = () => {
                         {savingProfile ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Saving…
+                            {t('profile.saving')}
                           </>
                         ) : (
                           <>
                             <Save className="w-4 h-4" />
-                            Save Changes
+                            {t('buttons.saveChanges')}
                           </>
                         )}
                       </button>
@@ -1033,14 +1038,14 @@ const CustomerDashboard = () => {
                   {/* ── RIGHT: Change Password ──────────────────── */}
                   <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
                     <h3 className="text-xl font-bold text-[#192336] mb-6">
-                      Change Password
+                      {t('profile.changePassword')}
                     </h3>
 
                     <form onSubmit={handlePasswordSubmit} className="space-y-5">
                       <div>
                         <label className={labelCls}>
                           <Lock className="w-4 h-4 inline mr-1.5" />
-                          Current Password
+                          {t('profile.currentPassword')}
                         </label>
                         <input
                           type="password"
@@ -1052,7 +1057,7 @@ const CustomerDashboard = () => {
                             })
                           }
                           className={inputCls}
-                          placeholder="••••••••"
+                          placeholder={t('profile.passwordPlaceholder')}
                           required
                         />
                       </div>
@@ -1060,7 +1065,7 @@ const CustomerDashboard = () => {
                       <div>
                         <label className={labelCls}>
                           <Lock className="w-4 h-4 inline mr-1.5" />
-                          New Password
+                          {t('profile.newPassword')}
                         </label>
                         <input
                           type="password"
@@ -1072,7 +1077,7 @@ const CustomerDashboard = () => {
                             })
                           }
                           className={inputCls}
-                          placeholder="••••••••"
+                          placeholder={t('profile.passwordPlaceholder')}
                           required
                           minLength={6}
                         />
@@ -1081,7 +1086,7 @@ const CustomerDashboard = () => {
                       <div>
                         <label className={labelCls}>
                           <Lock className="w-4 h-4 inline mr-1.5" />
-                          Confirm New Password
+                          {t('profile.confirmPassword')}
                         </label>
                         <input
                           type="password"
@@ -1093,7 +1098,7 @@ const CustomerDashboard = () => {
                             })
                           }
                           className={inputCls}
-                          placeholder="••••••••"
+                          placeholder={t('profile.passwordPlaceholder')}
                           required
                           minLength={6}
                         />
@@ -1101,7 +1106,7 @@ const CustomerDashboard = () => {
 
                       {/* Password strength hint */}
                       <p className="text-xs text-gray-500">
-                        Password must be at least 6 characters long.
+                        {t('profile.passwordHint')}
                       </p>
 
                       <button
@@ -1112,12 +1117,12 @@ const CustomerDashboard = () => {
                         {savingPassword ? (
                           <>
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Changing…
+                            {t('profile.changing')}
                           </>
                         ) : (
                           <>
                             <Lock className="w-4 h-4" />
-                            Change Password
+                            {t('buttons.changePassword')}
                           </>
                         )}
                       </button>
@@ -1126,12 +1131,12 @@ const CustomerDashboard = () => {
                     {/* Info box */}
                     <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                       <p className="text-sm text-blue-700 font-medium mb-1">
-                        Security Tips
+                        {t('profile.securityTips')}
                       </p>
                       <ul className="text-xs text-blue-600 space-y-1 list-disc list-inside">
-                        <li>Use a mix of letters, numbers and symbols</li>
-                        <li>Avoid using easily guessable passwords</li>
-                        <li>Don't reuse passwords from other sites</li>
+                        <li>{t('profile.securityTip1')}</li>
+                        <li>{t('profile.securityTip2')}</li>
+                        <li>{t('profile.securityTip3')}</li>
                       </ul>
                     </div>
                   </div>
@@ -1182,23 +1187,23 @@ const CustomerDashboard = () => {
               </div>
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Login Required
+              {t('modals.loginRequired')}
             </h3>
             <p className="text-gray-600 mb-6">
-              Please login to continue your reservation.
+              {t('modals.loginToContinue')}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => navigate("/login")}
                 className="flex-1 bg-[#004aad] hover:bg-[#003a8c] text-white py-3 rounded-lg font-semibold transition-colors"
               >
-                Login
+                {t('navbar.login')}
               </button>
               <button
                 onClick={() => setShowLoginModal(false)}
                 className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-lg font-semibold transition-colors"
               >
-                Close
+                {t('buttons.close')}
               </button>
             </div>
           </div>

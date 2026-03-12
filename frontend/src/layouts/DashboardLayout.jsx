@@ -2,11 +2,14 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Car, Calendar, CalendarDays, Users, Wrench, Settings as SettingsIcon, LogOut } from 'lucide-react';
 import MaintenanceBell from '../components/MaintenanceBell';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const DashboardLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -14,20 +17,20 @@ const DashboardLayout = () => {
   };
 
   const navItems = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/admin/cars', label: 'Vehicles', icon: Car },
-    { path: '/admin/bookings', label: 'Reservations', icon: Calendar },
-    { path: '/admin/planning', label: 'Calendar', icon: CalendarDays },
-    { path: '/admin/customers', label: 'Customers', icon: Users },
-    { path: '/admin/maintenance', label: 'Maintenance', icon: Wrench },
-    { path: '/admin/settings', label: 'Settings', icon: SettingsIcon }
+    { path: '/admin/dashboard', label: t('navbar.dashboard'), icon: LayoutDashboard },
+    { path: '/admin/cars', label: t('navbar.vehicles'), icon: Car },
+    { path: '/admin/bookings', label: t('navbar.reservations'), icon: Calendar },
+    { path: '/admin/planning', label: t('navbar.calendar'), icon: CalendarDays },
+    { path: '/admin/customers', label: t('navbar.customers'), icon: Users },
+    { path: '/admin/maintenance', label: t('navbar.maintenance'), icon: Wrench },
+    { path: '/admin/settings', label: t('navbar.settings'), icon: SettingsIcon }
   ];
 
   return (
     <div className="flex h-screen bg-gray-100">
       <aside className="w-64 bg-gradient-to-r from-[#081839] to-[#1b2a4f] text-white flex flex-col">
         <div className="p-6">
-          <h1 className="text-2xl font-bold">🚗 Car Rental</h1>
+          <h1 className="text-2xl font-bold">🚗 {t('navbar.carRental')}</h1>
         </div>
 
         <div className="px-4 py-2 ">
@@ -43,7 +46,7 @@ const DashboardLayout = () => {
               {user?.firstName || 'Michael'} {user?.lastName || 'Johnson'}
             </div>
             <div className="text-xs text-gray-400 mt-1">
-              {user?.role === 'ADMIN' ? 'Administrator' : 'Customer'}
+              {user?.role === 'ADMIN' ? t('navbar.administrator') : t('navbar.customer')}
             </div>
           </div>
         </div>
@@ -72,12 +75,13 @@ const DashboardLayout = () => {
             className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-lg transition flex items-center justify-center gap-2 font-medium"
           >
             <LogOut className="w-5 h-5" />
-            Logout
+            {t('navbar.logout')}
           </button>
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-end items-center">
+        <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
+          <LanguageSwitcher />
           <MaintenanceBell />
         </div>
         <div className="p-8">

@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Car, User, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const CustomerNavbar = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, logout } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const { t } = useTranslation();
 
   const activeTab = searchParams.get("tab") || "vehicles";
 
@@ -29,7 +32,7 @@ const CustomerNavbar = () => {
             <div className="p-2 bg-[#d9b15c]/10 rounded-lg">
               <Car className="h-6 w-6 text-[#d9b15c]" />
             </div>
-            <span className="text-xl font-bold text-[#192336]">CAR RENTAL</span>
+            <span className="text-xl font-bold text-[#192336]">{t('navbar.carRental')}</span>
           </div>
 
           {/* Navigation */}
@@ -42,7 +45,7 @@ const CustomerNavbar = () => {
                   : "text-[#192336] hover:text-[#004aad]"
               }`}
             >
-              Vehicles
+              {t('navbar.vehicles')}
             </button>
             {user && (
               <>
@@ -54,7 +57,7 @@ const CustomerNavbar = () => {
                       : "text-[#192336] hover:text-[#004aad]"
                   }`}
                 >
-                  My Reservations
+                  {t('navbar.myReservations')}
                 </button>
                 <button
                   onClick={() => changeTab("profile")}
@@ -64,14 +67,16 @@ const CustomerNavbar = () => {
                       : "text-[#192336] hover:text-[#004aad]"
                   }`}
                 >
-                  Profile
+                  {t('navbar.profile')}
                 </button>
               </>
             )}
           </div>
 
           {/* Profile Dropdown or Login */}
-          <div className="relative">
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <div className="relative">
             {user ? (
               <>
                 <button
@@ -82,7 +87,7 @@ const CustomerNavbar = () => {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <span className="font-medium text-[#192336]">
-                    {user?.firstName || "User"}
+                    {user?.firstName || t('navbar.user')}
                   </span>
                   <ChevronDown className="w-4 h-4 text-gray-600" />
                 </button>
@@ -102,7 +107,7 @@ const CustomerNavbar = () => {
                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors w-full text-left"
                       >
                         <User className="w-4 h-4" />
-                        <span>Profile</span>
+                        <span>{t('navbar.profile')}</span>
                       </button>
                       <button
                         onClick={() => {
@@ -112,7 +117,7 @@ const CustomerNavbar = () => {
                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors w-full text-left"
                       >
                         <Car className="w-4 h-4" />
-                        <span>My Reservations</span>
+                        <span>{t('navbar.myReservations')}</span>
                       </button>
                       <hr className="my-2" />
                       <button
@@ -120,7 +125,7 @@ const CustomerNavbar = () => {
                         className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors w-full text-left text-red-600"
                       >
                         <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
+                        <span>{t('navbar.logout')}</span>
                       </button>
                     </div>
                   </>
@@ -131,10 +136,11 @@ const CustomerNavbar = () => {
                 onClick={() => navigate("/login")}
                 className="bg-[#004aad] hover:bg-[#003a8c] text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
               >
-                Log In
+                {t('navbar.login')}
               </button>
             )}
           </div>
+        </div>
         </div>
       </div>
     </nav>
