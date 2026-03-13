@@ -379,17 +379,12 @@ const sendAdminCancellationNotification = async (
   contractNumber,
   reservationId,
 ) => {
-  const nodemailer = await import("nodemailer");
-  const transporter = nodemailer.default.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  const { Resend } = await import('resend');
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const FROM_EMAIL = process.env.EMAIL_FROM || 'Car Rental <onboarding@resend.dev>';
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+  await resend.emails.send({
+    from: FROM_EMAIL,
     to: adminEmail,
     subject: "Customer Cancelled a Confirmed Reservation",
     html: `
