@@ -72,7 +72,7 @@ export class MaintenanceService {
         if (insuranceId) {
           operations.push(
             prisma.maintenance.update({
-              where: { id: parseInt(insuranceId) },
+              where: { id: insuranceId },
               data: { dueDate: new Date(insuranceExpiry), isCompleted: false }
             })
           );
@@ -80,7 +80,7 @@ export class MaintenanceService {
           operations.push(
             prisma.maintenance.create({
               data: { 
-                vehicleId: parseInt(vehicleId), 
+                vehicleId: vehicleId, 
                 type: 'INSURANCE', 
                 dueDate: new Date(insuranceExpiry),
                 isCompleted: false
@@ -91,7 +91,7 @@ export class MaintenanceService {
       } else if (insuranceId) {
         operations.push(
           prisma.maintenance.update({
-            where: { id: parseInt(insuranceId) },
+            where: { id: insuranceId },
             data: { isCompleted: true }
           })
         );
@@ -105,7 +105,7 @@ export class MaintenanceService {
         if (oilChangeId) {
           operations.push(
             prisma.maintenance.update({
-              where: { id: parseInt(oilChangeId) },
+              where: { id: oilChangeId },
               data: { 
                 dueMileage: oilKm,
                 dueDate: new Date(),
@@ -117,7 +117,7 @@ export class MaintenanceService {
           operations.push(
             prisma.maintenance.create({
               data: { 
-                vehicleId: parseInt(vehicleId), 
+                vehicleId: vehicleId, 
                 type: 'OIL_CHANGE', 
                 dueDate: new Date(), 
                 dueMileage: oilKm,
@@ -129,7 +129,7 @@ export class MaintenanceService {
       } else if (oilChangeId) {
         operations.push(
           prisma.maintenance.update({
-            where: { id: parseInt(oilChangeId) },
+            where: { id: oilChangeId },
             data: { isCompleted: true }
           })
         );
@@ -142,7 +142,7 @@ export class MaintenanceService {
         if (serviceId) {
           operations.push(
             prisma.maintenance.update({
-              where: { id: parseInt(serviceId) },
+              where: { id: serviceId },
               data: { dueDate: new Date(nextService), isCompleted: false }
             })
           );
@@ -150,7 +150,7 @@ export class MaintenanceService {
           operations.push(
             prisma.maintenance.create({
               data: { 
-                vehicleId: parseInt(vehicleId), 
+                vehicleId: vehicleId, 
                 type: 'SERVICE', 
                 dueDate: new Date(nextService),
                 isCompleted: false
@@ -161,7 +161,7 @@ export class MaintenanceService {
       } else if (serviceId) {
         operations.push(
           prisma.maintenance.update({
-            where: { id: parseInt(serviceId) },
+            where: { id: serviceId },
             data: { isCompleted: true }
           })
         );
@@ -178,7 +178,7 @@ export class MaintenanceService {
    */
   static async markComplete(maintenanceId) {
     const maintenance = await prisma.maintenance.findUnique({
-      where: { id: parseInt(maintenanceId) }
+      where: { id: maintenanceId }
     });
 
     if (!maintenance) {
@@ -190,7 +190,7 @@ export class MaintenanceService {
     }
 
     await prisma.maintenance.update({
-      where: { id: parseInt(maintenanceId) },
+      where: { id: maintenanceId },
       data: { isCompleted: true }
     });
 
@@ -294,7 +294,7 @@ export class MaintenanceService {
     
     // Get existing active maintenance records
     const existing = await prisma.maintenance.findMany({
-      where: { vehicleId: parseInt(vehicleId), isCompleted: false, isDeleted: false }
+      where: { vehicleId: vehicleId, isCompleted: false, isDeleted: false }
     });
 
     const operations = [];
@@ -313,7 +313,7 @@ export class MaintenanceService {
         operations.push(
           prisma.maintenance.create({
             data: {
-              vehicleId: parseInt(vehicleId),
+              vehicleId: vehicleId,
               type: 'OIL_CHANGE',
               dueDate: new Date(),
               dueMileage: parseInt(nextOilChangeMileage),
@@ -345,7 +345,7 @@ export class MaintenanceService {
         operations.push(
           prisma.maintenance.create({
             data: {
-              vehicleId: parseInt(vehicleId),
+              vehicleId: vehicleId,
               type: 'SERVICE',
               dueDate: new Date(nextServiceDate),
               isCompleted: false
@@ -376,7 +376,7 @@ export class MaintenanceService {
         operations.push(
           prisma.maintenance.create({
             data: {
-              vehicleId: parseInt(vehicleId),
+              vehicleId: vehicleId,
               type: 'INSURANCE',
               dueDate: new Date(insuranceExpiryDate),
               isCompleted: false

@@ -392,7 +392,7 @@ const Maintenance = () => {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border p-4">
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Status

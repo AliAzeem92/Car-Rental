@@ -30,7 +30,7 @@ export const getVehicles = async (req, res) => {
 export const getVehicle = async (req, res) => {
   try {
     const vehicle = await prisma.vehicle.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: { id: req.params.id },
       include: { vehicleimage: true, maintenance: true }
     });
     if (!vehicle) return res.status(404).json({ error: 'Vehicle not found' });
@@ -105,7 +105,7 @@ export const updateVehicle = async (req, res) => {
 
     if (updateData.licensePlate) {
       const existing = await prisma.vehicle.findFirst({
-        where: { licensePlate: updateData.licensePlate, id: { not: parseInt(id) } }
+        where: { licensePlate: updateData.licensePlate, id: { not: id } }
       });
       if (existing) {
         return res.status(400).json({ error: 'License plate already exists' });
@@ -136,7 +136,7 @@ export const updateVehicle = async (req, res) => {
 
     if (existingImageIds) {
       const currentImages = await prisma.vehicleimage.findMany({
-        where: { vehicleId: parseInt(id) }
+        where: { vehicleId: id }
       });
       const idsToKeep = JSON.parse(existingImageIds);
       const imagesToDelete = currentImages.filter(img => !idsToKeep.includes(img.id));
@@ -152,18 +152,18 @@ export const updateVehicle = async (req, res) => {
       );
       
       await prisma.vehicleimage.createMany({
-        data: imageUrls.map(url => ({ vehicleId: parseInt(id), imageUrl: url }))
+        data: imageUrls.map(url => ({ vehicleId: id, imageUrl: url }))
       });
     }
 
     const vehicle = await prisma.vehicle.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: vehicleData,
       include: { vehicleimage: true, maintenance: true }
     });
 
     // Generate alerts after vehicle update
-    await MaintenanceService.generateAlertsForVehicle(parseInt(id));
+    await MaintenanceService.generateAlertsForVehicle(id);
 
     console.log('Updated vehicle:', vehicle);
     res.json(vehicle);
@@ -176,7 +176,7 @@ export const updateVehicle = async (req, res) => {
 export const getVehicleHistory = async (req, res) => {
   try {
     const reservations = await prisma.reservation.findMany({
-      where: { vehicleId: parseInt(req.params.id) },
+      where: { vehicleId: req.params.id },
       include: { user: true, checkin: true, checkout: true },
       orderBy: { createdAt: 'desc' }
     });

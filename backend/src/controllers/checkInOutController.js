@@ -6,7 +6,7 @@ export const createCheckOut = async (req, res) => {
     const userId = req.userId;
 
     const checkout = await CheckInOutService.createCheckOut(
-      parseInt(reservationId),
+      reservationId,
       userId
     );
 
@@ -23,7 +23,7 @@ export const createCheckIn = async (req, res) => {
     const userId = req.userId;
 
     const result = await CheckInOutService.createCheckIn(
-      parseInt(reservationId),
+      reservationId,
       mileageIn,
       damageReport,
       extraCharges,
@@ -40,9 +40,7 @@ export const getCheckInOut = async (req, res) => {
   try {
     const { reservationId } = req.params;
 
-    const reservation = await CheckInOutService.getCheckInOut(
-      parseInt(reservationId)
-    );
+    const reservation = await CheckInOutService.getCheckInOut(reservationId);
 
     if (!reservation) {
       return res.status(404).json({ error: 'Reservation not found' });
@@ -60,7 +58,7 @@ export const updateCheckIn = async (req, res) => {
     const userId = req.userId;
 
     const updatedCheckin = await CheckInOutService.updateCheckIn(
-      parseInt(checkinId),
+      checkinId,
       req.body,
       userId
     );

@@ -311,44 +311,44 @@ const Vehicles = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Vehicles</h1>
+    <div className="space-y-5 page-enter">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Vehicles</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition"
+          className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors shadow-sm text-sm sm:text-base w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" /> Add Vehicle
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <table className="w-full">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 table-responsive">
+        <table className="w-full" style={{ minWidth: '700px' }}>
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[10%]">
-                PHOTO
+              <th className="px-4 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Photo
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[15%]">
-                VEHICLE
+              <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Vehicle
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[12%]">
-                PLATE
+              <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Plate
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[13%]">
-                CATEGORY
+              <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Category
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[12%]">
-                DAILY PRICE
+              <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Daily Price
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[12%]">
-                MILEAGE
+              <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Mileage
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[13%]">
-                STATUS
+              <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Status
               </th>
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 w-[13%]">
-                ACTIONS
+              <th className="px-4 py-3.5 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                Actions
               </th>
             </tr>
           </thead>
@@ -359,7 +359,7 @@ const Vehicles = () => {
           >
             {paginatedVehicles.length === 0 ? (
               <tr>
-                <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                <td colSpan="8" className="px-6 py-12 text-center text-gray-500 text-sm">
                   No vehicles available
                 </td>
               </tr>
@@ -367,10 +367,10 @@ const Vehicles = () => {
               paginatedVehicles.map((vehicle) => (
                 <tr
                   key={vehicle.id}
-                  className={`hover:bg-gray-50 transition ${!vehicle.isAvailable ? "opacity-50 bg-gray-300 " : ""}`}
+                  className={`hover:bg-gray-50 transition-colors ${!vehicle.isAvailable ? "opacity-50 bg-gray-50" : ""}`}
                 >
-                <td className="px-6 py-4">
-                  <div className="w-20 h-16 bg-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <td className="px-4 py-3.5">
+                  <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden shadow-sm">
                     {vehicle.vehicleimage?.[0] ? (
                       <img
                         src={vehicle.vehicleimage[0].imageUrl}
@@ -378,39 +378,37 @@ const Vehicles = () => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-3xl">
+                      <div className="w-full h-full flex items-center justify-center text-2xl">
                         🚗
                       </div>
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="text-xs font-semibold text-gray-800">
+                <td className="px-4 py-3.5">
+                  <div className="text-xs font-semibold text-gray-800 whitespace-nowrap">
                     {vehicle.brand} {vehicle.model}
                   </div>
                   <div className="text-xs text-gray-500">
-                    2026 • #{vehicle.id}
+                    #{vehicle.id}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-xs font-semibold">
-                      {vehicle.licensePlate.split("-")[0] || "ABC"}
-                    </div>
-                  </div>
+                <td className="px-4 py-3.5">
+                  <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap">
+                    {vehicle.licensePlate}
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-xs text-gray-800">
+                <td className="px-4 py-3.5 text-xs text-gray-800 whitespace-nowrap">
                   {vehicle.category}
                 </td>
-                <td className="px-6 py-4 text-xs font-semibold text-blue-600">
+                <td className="px-4 py-3.5 text-xs font-semibold text-blue-600 whitespace-nowrap">
                   €{vehicle.dailyPrice.toFixed(2)}
                 </td>
-                <td className="px-6 py-4 text-xs text-gray-800">
+                <td className="px-4 py-3.5 text-xs text-gray-800 whitespace-nowrap">
                   {vehicle.currentMileage || vehicle.mileage} km
                 </td>
-                <td className="px-6 py-4">
-                  <div
-                    className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
+                <td className="px-4 py-3.5">
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-block whitespace-nowrap ${
                       !vehicle.isAvailable
                         ? "bg-gray-100 text-gray-700"
                         : vehicle.status === "AVAILABLE"
@@ -423,13 +421,13 @@ const Vehicles = () => {
                     }`}
                   >
                     {!vehicle.isAvailable ? "UNAVAILABLE" : vehicle.status}
-                  </div>
+                  </span>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+                <td className="px-4 py-3.5">
+                  <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => handleEditClick(vehicle)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition"
+                      className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -442,17 +440,17 @@ const Vehicles = () => {
         </table>
       </div>
 
-      <div className="flex justify-between items-center text-sm text-gray-600">
-        <span>
-          Showing {(currentPage - 1) * itemsPerPage + 1}-
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-gray-600">
+        <span className="text-center sm:text-left">
+          Showing {(currentPage - 1) * itemsPerPage + 1}–
           {Math.min(currentPage * itemsPerPage, vehicles.length)} of{" "}
           {vehicles.length}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-1.5 flex-wrap">
           <button
             onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
           >
             Previous
           </button>
@@ -460,8 +458,8 @@ const Vehicles = () => {
             <button
               key={i + 1}
               onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 border rounded hover:bg-gray-50 ${
-                currentPage === i + 1 ? "bg-blue-500 text-white" : ""
+              className={`px-3 py-1.5 border rounded-lg text-xs transition-colors ${
+                currentPage === i + 1 ? "bg-blue-500 text-white border-blue-500" : "hover:bg-gray-50"
               }`}
             >
               {i + 1}
@@ -472,7 +470,7 @@ const Vehicles = () => {
               handlePageChange(Math.min(totalPages, currentPage + 1))
             }
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
           >
             Next
           </button>
@@ -486,18 +484,18 @@ const Vehicles = () => {
           resetForm();
         }}
         title="Add New Vehicle"
-        size="max-w-6xl"
+        size="max-w-4xl"
       >
         <form
           onSubmit={handleSubmit}
-          className="max-h-[75vh] overflow-y-auto pr-2"
+          className="space-y-1"
         >
           <div className="space-y-5">
             <div>
               <h3 className="text-base font-semibold text-gray-800 mb-3">
                 Basic Information
               </h3>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Brand *
@@ -627,20 +625,6 @@ const Vehicles = () => {
                     width="w-full"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <Dropdown
-                    value={formData.status}
-                    onChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
-                    options={statusOptions}
-                    showColor={true}
-                    width="w-full"
-                  />
-                </div>
               </div>
               <div className="mt-3">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -676,7 +660,7 @@ const Vehicles = () => {
               <h3 className="text-base font-semibold text-gray-800 mb-3">
                 Pricing & Mileage
               </h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Daily Price (€) *
@@ -727,7 +711,7 @@ const Vehicles = () => {
               <h3 className="text-base font-semibold text-gray-800 mb-4">
                 Maintenance & Alerts
               </h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Insurance Expiry Date
@@ -845,7 +829,7 @@ const Vehicles = () => {
             </div>
           </div>
 
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Button type="submit" loading={loading} className="flex-1">
               Create Vehicle
             </Button>
@@ -871,19 +855,19 @@ const Vehicles = () => {
           resetForm();
         }}
         title="Edit Vehicle"
-        size="max-w-6xl"
+        size="max-w-5xl"
       >
         {editModal && (
           <form
             onSubmit={handleUpdate}
-            className="max-h-[75vh] overflow-y-auto pr-2"
+            className="space-y-1"
           >
             <div className="space-y-5">
               <div>
                 <h3 className="text-base font-semibold text-gray-800 mb-3">
                   Basic Information
                 </h3>
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Brand *
@@ -1073,7 +1057,7 @@ const Vehicles = () => {
                 <h3 className="text-base font-semibold text-gray-800 mb-3">
                   Pricing & Mileage
                 </h3>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Daily Price (€) *
@@ -1130,7 +1114,7 @@ const Vehicles = () => {
                 <h3 className="text-base font-semibold text-gray-800 mb-4">
                   Maintenance & Alerts
                 </h3>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Next Oil Change (km)
@@ -1270,7 +1254,7 @@ const Vehicles = () => {
               </div>
             </div>
 
-            <div className="mt-6 flex gap-4">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button type="submit" loading={loading} className="flex-1">
                 Update Vehicle
               </Button>

@@ -22,6 +22,7 @@ import {
   X,
   Clock,
   Camera,
+  Filter,
 } from "lucide-react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -146,6 +147,7 @@ const CustomerDashboard = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   /* ── Route protection exactly as requested  ───────── */
   useEffect(() => {
@@ -195,6 +197,16 @@ const CustomerDashboard = () => {
   useEffect(() => {
     applyFilters();
   }, [filters, vehicles]);
+
+  /* ── Lock body scroll when mobile filter is open ────── */
+  useEffect(() => {
+    if (showMobileFilters) {
+      document.body.classList.add('filter-open');
+    } else {
+      document.body.classList.remove('filter-open');
+    }
+    return () => document.body.classList.remove('filter-open');
+  }, [showMobileFilters]);
 
   const changeTab = (tab) => {
     setSearchParams({ tab });
@@ -480,15 +492,50 @@ const CustomerDashboard = () => {
           ════════════════════════════════════════════ */}
           {activeTab === "vehicles" && (
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_320px] gap-6">
+              {/* Mobile Filter Toggle */}
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="lg:hidden flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-3 mb-4 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                <Filter className="w-5 h-5 text-[#192336]" />
+                <span className="font-medium text-[#192336]">Filters</span>
+              </button>
               {/* Filters sidebar */}
-              <div className="hidden lg:block sticky top-24 self-start">
-                <FiltersSidebar
-                  categories={[...new Set(vehicles.map((v) => v.category))]}
-                />
+              <div className={`${
+                showMobileFilters ? 'fixed inset-0 z-50 bg-black/50 lg:bg-transparent' : 'hidden'
+              } lg:block lg:sticky lg:top-24 lg:self-start`}>
+                <div className={`${
+                  showMobileFilters ? 'fixed inset-y-0 left-0 w-80 bg-white shadow-2xl overflow-y-auto' : ''
+                } lg:relative lg:w-auto lg:shadow-none`}>
+                  {showMobileFilters && (
+                    <div className="lg:hidden flex items-center justify-between p-4 border-b">
+                      <h3 className="text-lg font-bold">Filters</h3>
+                      <button
+                        onClick={() => setShowMobileFilters(false)}
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
+                  <FiltersSidebar
+                    categories={[...new Set(vehicles.map((v) => v.category))]}
+                  />
+                  {showMobileFilters && (
+                    <div className="lg:hidden p-4 border-t">
+                      <button
+                        onClick={() => setShowMobileFilters(false)}
+                        className="w-full bg-[#004aad] text-white py-3 rounded-lg font-semibold hover:bg-[#003a8c] transition-colors"
+                      >
+                        Apply Filters
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Car listings */}
-              <div className="h-[calc(100vh-180px)] overflow-y-auto pr-4 pb-8">
+              <div className="overflow-y-auto pr-4 pb-8">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-[#192336] mb-1">
                     {t('dashboard.availableVehicles')}
@@ -498,7 +545,7 @@ const CustomerDashboard = () => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {filteredVehicles.map((car) => (
                     <div
                       key={car.id}
@@ -535,20 +582,20 @@ const CustomerDashboard = () => {
                             <span>{car.transmission || "Auto"}</span>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <div>
-                            <span className="text-2xl font-bold text-[#192336]">
+                            <span className="text-xl sm:text-2xl font-bold text-[#192336]">
                               ${car.dailyPrice}
                             </span>
-                            <span className="text-gray-600">{t('vehicles.perDay')}</span>
+                            <span className="text-gray-600 text-sm sm:text-base">{t('vehicles.perDay')}</span>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
                             <button
                               onClick={() => {
                                 setSelectedCar(car);
                                 setShowDetailsModal(true);
                               }}
-                              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+                              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-center"
                             >
                               {t('buttons.viewDetails')}
                             </button>
@@ -561,7 +608,7 @@ const CustomerDashboard = () => {
                                   setShowBookingModal(true);
                                 }
                               }}
-                              className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003a8c] transition-colors text-sm font-medium"
+                              className="px-3 sm:px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003a8c] transition-colors text-sm font-medium text-center"
                             >
                               {t('buttons.reserve')}
                             </button>
@@ -581,7 +628,7 @@ const CustomerDashboard = () => {
                 )}
               </div>
 
-              {/* Right sidebar */}
+              {/* Right sidebar - Hidden on mobile/tablet, visible on desktop */}
               <div className="hidden xl:block sticky top-24 self-start space-y-6">
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h3 className="text-lg font-bold text-[#192336] mb-4">
@@ -597,8 +644,16 @@ const CustomerDashboard = () => {
                       className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition-colors"
                     >
                       <div className="flex gap-3 mb-3">
-                        <div className="w-20 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Car className="h-6 w-6 text-gray-400" />
+                        <div className="w-20 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {recentReservation.vehicle?.vehicleimage?.[0]?.imageUrl ? (
+                            <img
+                              src={recentReservation.vehicle.vehicleimage[0].imageUrl}
+                              alt={`${recentReservation.vehicle.brand} ${recentReservation.vehicle.model}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Car className="h-6 w-6 text-gray-400" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-[#192336] truncate">
@@ -696,8 +751,8 @@ const CustomerDashboard = () => {
               RESERVATIONS TAB
           ════════════════════════════════════════════ */}
           {activeTab === "reservations" && (
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-[#192336] mb-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-0">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#192336] mb-6 sm:mb-8">
                 {t('reservations.title')}
               </h2>
 
@@ -720,11 +775,11 @@ const CustomerDashboard = () => {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {reservations.map((res) => (
                     <div
                       key={res.id}
-                      className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                      className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300"
                     >
                       <div className="p-6 md:p-8">
                         {/* Header row */}
@@ -844,15 +899,15 @@ const CustomerDashboard = () => {
               PROFILE TAB — Two-column layout
           ════════════════════════════════════════════ */}
           {activeTab === "profile" && (
-            <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-[#192336] mb-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-0">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#192336] mb-6 sm:mb-8">
                 {t('profile.title')}
               </h2>
 
               {loadingProfile ? (
                 <Spinner />
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                   {/* ── LEFT: Customer Information ─────────────── */}
                   <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
                     <h3 className="text-xl font-bold text-[#192336] mb-6">

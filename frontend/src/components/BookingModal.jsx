@@ -59,7 +59,7 @@ const BookingModal = ({ car, onClose, onSuccess }) => {
     setSubmitting(true);
     try {
       await bookingService.createBooking({
-        vehicleId: parseInt(car.id),
+        vehicleId: car.id,
         userId: user.id,
         pickup_location: formData.pickup_location,
         return_location: formData.return_location,

@@ -9,6 +9,7 @@ import {
   sendCarReturned,
   sendPaymentReceived,
   sendReservationCancelled,
+  sendAdminCancellationNotification,
 } from "../config/email.js";
 
 const generateContractNumber = () => {
@@ -22,7 +23,7 @@ const checkAvailability = async (
   excludeReservationId = null,
 ) => {
   const where = {
-    vehicleId,
+    vehicleId: String(vehicleId),
     status: { in: ["CONFIRMED", "ONGOING"] },
     OR: [{ startDate: { lte: endDate }, endDate: { gte: startDate } }],
   };
@@ -44,11 +45,11 @@ export const getReservations = async (req, res) => {
     if (userId === "current" && req.userId) {
       where.userId = req.userId;
     } else if (userId) {
-      where.userId = parseInt(userId);
+      where.userId = userId;
     }
 
     if (status) where.status = status;
-    if (vehicleId) where.vehicleId = parseInt(vehicleId);
+    if (vehicleId) where.vehicleId = vehicleId;
 
     const reservations = await prisma.reservation.findMany({
       where,
@@ -125,7 +126,7 @@ export const createReservation = async (req, res) => {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(userId) },
+      where: { id: userId },
     });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -148,7 +149,7 @@ export const createReservation = async (req, res) => {
     }
 
     const isAvailable = await checkAvailability(
-      parseInt(vehicleId),
+      String(vehicleId),
       new Date(actualStartDate),
       new Date(actualEndDate),
     );
@@ -160,8 +161,8 @@ export const createReservation = async (req, res) => {
 
     const reservation = await prisma.reservation.create({
       data: {
-        vehicleId: parseInt(vehicleId),
-        userId: parseInt(userId),
+        vehicleId: String(vehicleId),
+        userId: String(userId),
         startDate: new Date(actualStartDate),
         endDate: new Date(actualEndDate),
         destination: actualPickupLocation || null, // Keeping for backward compatibility
@@ -178,7 +179,7 @@ export const createReservation = async (req, res) => {
     });
 
     await prisma.vehicle.update({
-      where: { id: parseInt(vehicleId) },
+      where: { id: vehicleId },
       data: { status: "RESERVED" },
     });
 
@@ -217,7 +218,7 @@ export const updateReservationStatus = async (req, res) => {
 
     // Fetch the reservation first
     const reservation = await prisma.reservation.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: { vehicle: true, user: true },
     });
 
@@ -268,7 +269,7 @@ export const updateReservationStatus = async (req, res) => {
     // ADMIN has no restrictions - can update to any status
 
     const updatedReservation = await ReservationService.updateReservationStatus(
-      parseInt(id),
+      id,
       status,
       userId,
     );
@@ -282,7 +283,7 @@ export const updateReservationStatus = async (req, res) => {
           updatedReservation.user,
         );
         await prisma.reservation.update({
-          where: { id: parseInt(id) },
+          where: { id },
           data: { contractPdfUrl },
         });
         updatedReservation.contractPdfUrl = contractPdfUrl;
@@ -307,7 +308,7 @@ export const updateReservationStatus = async (req, res) => {
       // Send car returned email (non-blocking)
       const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
       const checkin = await prisma.checkin.findUnique({
-        where: { reservationId: parseInt(id) },
+        where: { reservationId: id },
       });
       sendCarReturned(
         updatedReservation.user.email,
@@ -368,42 +369,7 @@ export const updateReservationStatus = async (req, res) => {
   }
 };
 
-// Helper function for admin notification
-const sendAdminCancellationNotification = async (
-  adminEmail,
-  adminName,
-  customerName,
-  vehicleName,
-  startDate,
-  endDate,
-  contractNumber,
-  reservationId,
-) => {
-  const { Resend } = await import('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const FROM_EMAIL = process.env.EMAIL_FROM || 'Car Rental <onboarding@resend.dev>';
-
-  await resend.emails.send({
-    from: FROM_EMAIL,
-    to: adminEmail,
-    subject: "Customer Cancelled a Confirmed Reservation",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #EF4444;">Customer Cancelled a Confirmed Reservation</h2>
-        <p>Hello ${adminName},</p>
-        <p>The following reservation has been cancelled by the customer.</p>
-        <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 8px 0;"><strong>Vehicle:</strong> ${vehicleName}</p>
-          <p style="margin: 8px 0;"><strong>Reservation ID:</strong> ${reservationId}</p>
-          <p style="margin: 8px 0;"><strong>Customer Name:</strong> ${customerName}</p>
-          <p style="margin: 8px 0;"><strong>Pickup Date:</strong> ${new Date(startDate).toLocaleDateString()}</p>
-          <p style="margin: 8px 0;"><strong>Return Date:</strong> ${new Date(endDate).toLocaleDateString()}</p>
-        </div>
-        <p>Please review the reservation in the admin panel.</p>
-      </div>
-    `,
-  });
-};
+// sendAdminCancellationNotification is now imported from ../config/email.js
 
 export const updatePaymentStatus = async (req, res) => {
   try {
@@ -418,7 +384,7 @@ export const updatePaymentStatus = async (req, res) => {
     });
 
     const reservation = await ReservationService.updatePaymentStatus(
-      parseInt(id),
+      id,
       paymentStatus,
       userId,
     );
@@ -458,7 +424,7 @@ export const checkIn = async (req, res) => {
 
     const checkIn = await prisma.checkin.create({
       data: {
-        reservationId: parseInt(id),
+        reservationId: id,
         mileageStart: parseInt(mileageStart),
         photos,
         signatureUrl,
@@ -466,14 +432,14 @@ export const checkIn = async (req, res) => {
     });
 
     await prisma.reservation.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: { status: "ONGOING" },
     });
 
     await prisma.vehicle.update({
       where: {
         id: (
-          await prisma.reservation.findUnique({ where: { id: parseInt(id) } })
+          await prisma.reservation.findUnique({ where: { id } })
         ).vehicleId,
       },
       data: { status: "RENTED" },
@@ -496,13 +462,13 @@ export const checkOut = async (req, res) => {
     }
 
     const reservation = await prisma.reservation.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: { checkIn: true },
     });
 
     const checkOut = await prisma.checkout.create({
       data: {
-        reservationId: parseInt(id),
+        reservationId: id,
         mileageEnd: parseInt(mileageEnd),
         damageReport,
         extraCharges: parseFloat(extraCharges || 0),
@@ -511,7 +477,7 @@ export const checkOut = async (req, res) => {
     });
 
     await prisma.reservation.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: { status: "COMPLETED" },
     });
 
@@ -533,7 +499,7 @@ export const downloadContract = async (req, res) => {
   try {
     const { id } = req.params;
     const reservation = await prisma.reservation.findUnique({
-      where: { id: parseInt(id) },
+      where: { id },
       include: { vehicle: true, user: true },
     });
 

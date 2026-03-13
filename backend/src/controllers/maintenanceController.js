@@ -25,7 +25,7 @@ export const updateMaintenance = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Vehicle ID is required' });
     }
 
-    const vehicle = await prisma.vehicle.findUnique({ where: { id: parseInt(vehicleId) } });
+    const vehicle = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
     if (!vehicle) {
       return res.status(404).json({ success: false, message: 'Vehicle not found' });
     }
@@ -62,7 +62,7 @@ export const softDelete = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.maintenance.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: { isDeleted: true, deletedAt: new Date() }
     });
     res.json({ success: true });
@@ -75,7 +75,7 @@ export const restore = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.maintenance.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: { isDeleted: false, deletedAt: null }
     });
     res.json({ success: true });

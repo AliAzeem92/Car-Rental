@@ -75,11 +75,11 @@ const Planning = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Planning & Calendar</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Planning & Calendar</h1>
         <button
           onClick={() => navigate('/dashboard/reservations')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" /> New Reservation
         </button>
@@ -98,55 +98,57 @@ const Planning = () => {
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => view === 'month' ? changeMonth(-1) : changeWeek(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => view === 'month' ? changeMonth(1) : changeWeek(1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => view === 'month' ? changeMonth(-1) : changeWeek(-1)}
+                className="p-1.5 hover:bg-white rounded-md transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => view === 'month' ? changeMonth(1) : changeWeek(1)}
+                className="p-1.5 hover:bg-white rounded-md transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
             <button
               onClick={goToToday}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors text-gray-700"
             >
-              today
+              Today
             </button>
-            <span className="text-xl font-semibold ml-4">
+            <span className="text-lg sm:text-xl font-bold text-gray-800">
               {view === 'month' ? getMonthName() : getWeekRange()}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-lg self-start xl:self-auto w-full sm:w-auto">
             <button
               onClick={() => setView('month')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                view === 'month' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              className={`flex-1 sm:px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                view === 'month' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              month
+              Month
             </button>
             <button
               onClick={() => setView('week')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                view === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              className={`flex-1 sm:px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                view === 'week' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              week
+              Week
             </button>
             <button
               onClick={() => setView('list')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                view === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              className={`flex-1 sm:px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                view === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              list
+              List
             </button>
           </div>
         </div>
@@ -222,61 +224,63 @@ const MonthView = ({ data, currentDate, isAnimating }) => {
   const weeks = getEventsForWeek();
 
   return (
-    <div className={`border rounded-lg overflow-hidden transition-opacity duration-150 ${
+    <div className={`border border-gray-200 rounded-xl transition-opacity duration-150 overflow-x-auto ${
       isAnimating ? 'opacity-0' : 'opacity-100'
     }`}>
-      <div className="grid grid-cols-7 bg-gray-50 border-b">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-center py-3 text-sm font-semibold text-blue-600 border-r last:border-r-0">
-            {day}
-          </div>
-        ))}
-      </div>
-      {weeks.map((weekData, weekIndex) => (
-        <div key={weekIndex} className="grid grid-cols-7 relative">
-          {weekData.week.map((day, dayIndex) => {
-            const isToday = day && day.toDateString() === new Date().toDateString();
-            return (
-              <div
-                key={dayIndex}
-                className={`min-h-32 border-r border-b last:border-r-0 p-2 relative ${
-                  day ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
-                }`}
-              >
-                {day && (
-                  <div className={`text-sm font-medium mb-2 ${
-                    isToday ? 'text-blue-600 font-bold' : 'text-gray-700'
-                  }`}>
-                    {day.getDate()}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div className="absolute top-8 left-0 right-0 space-y-1 px-2 pointer-events-none">
-            {weekData.events.slice(0, 3).map((event, idx) => {
-              const isFirstWeek = weekIndex === 0 || event.startDay > 0;
-              const isLastWeek = weekIndex === weeks.length - 1 || event.startDay + event.span < 7;
+      <div className="min-w-[800px]">
+        <div className="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="text-center py-3.5 text-xs font-semibold uppercase tracking-wider text-gray-500 border-r border-gray-200 last:border-r-0">
+              {day}
+            </div>
+          ))}
+        </div>
+        {weeks.map((weekData, weekIndex) => (
+          <div key={weekIndex} className="grid grid-cols-7 relative">
+            {weekData.week.map((day, dayIndex) => {
+              const isToday = day && day.toDateString() === new Date().toDateString();
               return (
                 <div
-                  key={event.id}
-                  className={`text-xs px-2 py-1 text-white truncate pointer-events-auto cursor-pointer ${RESERVATION_STATUS[event.status].color} ${
-                    isFirstWeek && isLastWeek ? 'rounded' : isFirstWeek ? 'rounded-l' : isLastWeek ? 'rounded-r' : ''
+                  key={dayIndex}
+                  className={`min-h-[140px] border-r border-b border-gray-200 last:border-r-0 p-2 relative ${
+                    day ? 'bg-white hover:bg-gray-50 transition-colors' : 'bg-gray-50/50'
                   }`}
-                  style={{
-                    gridColumn: `${event.startDay + 1} / span ${event.span}`,
-                    marginLeft: `${event.startDay * 14.28}%`,
-                    width: `${event.span * 14.28}%`
-                  }}
-                  title={`${event.user.firstName} ${event.user.lastName} - ${event.vehicle.brand} ${event.vehicle.model} (${event.vehicle.licensePlate})`}
                 >
-                  {event.user.firstName} {event.user.lastName} - {event.vehicle.brand} {event.vehicle.model} ({event.vehicle.licensePlate})
+                  {day && (
+                    <div className={`text-sm mb-2 flex items-center justify-center w-7 h-7 rounded-full ${
+                      isToday ? 'bg-blue-600 text-white font-bold' : 'text-gray-700 font-medium whitespace-nowrap'
+                    }`}>
+                      {day.getDate()}
+                    </div>
+                  )}
                 </div>
               );
             })}
+            <div className="absolute top-10 left-0 right-0 space-y-1.5 px-2 pointer-events-none">
+              {weekData.events.slice(0, 4).map((event, idx) => {
+                const isFirstWeek = weekIndex === 0 || event.startDay > 0;
+                const isLastWeek = weekIndex === weeks.length - 1 || event.startDay + event.span < 7;
+                return (
+                  <div
+                    key={event.id}
+                    className={`text-[11px] font-medium px-2.5 py-1.5 text-white truncate pointer-events-auto cursor-pointer shadow-sm hover:opacity-90 transition-opacity ${RESERVATION_STATUS[event.status].color} ${
+                      isFirstWeek && isLastWeek ? 'rounded-md' : isFirstWeek ? 'rounded-l-md' : isLastWeek ? 'rounded-r-md' : ''
+                    }`}
+                    style={{
+                      gridColumn: `${event.startDay + 1} / span ${event.span}`,
+                      marginLeft: `${event.startDay * 14.28}%`,
+                      width: `calc(${event.span * 14.28}% - 4px)`
+                    }}
+                    title={`${event.user.firstName} ${event.user.lastName} - ${event.vehicle.brand} ${event.vehicle.model} (${event.vehicle.licensePlate})`}
+                  >
+                    {event.vehicle.brand} {event.vehicle.model} ({event.user.firstName})
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
@@ -343,59 +347,66 @@ const WeekView = ({ data, currentDate, isAnimating }) => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   return (
-    <div className={`border rounded-lg overflow-hidden transition-opacity duration-150 ${
+    <div className={`border border-gray-200 rounded-xl transition-opacity duration-150 overflow-x-auto ${
       isAnimating ? 'opacity-0' : 'opacity-100'
     }`}>
-      <div className="grid grid-cols-8 bg-gray-50 border-b">
-        <div className="border-r"></div>
-        {weekDays.map((day, i) => {
-          const isToday = day.toDateString() === new Date().toDateString();
-          return (
-            <div key={i} className="text-center py-3 border-r last:border-r-0">
-              <div className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-gray-600'}`}>
-                {day.toLocaleDateString('en-US', { weekday: 'short' })} {day.getDate()}
+      <div className="min-w-[800px]">
+        <div className="grid grid-cols-8 bg-gray-50 border-b border-gray-200">
+          <div className="border-r border-gray-200"></div>
+          {weekDays.map((day, i) => {
+            const isToday = day.toDateString() === new Date().toDateString();
+            return (
+              <div key={i} className="text-center py-3.5 border-r border-gray-200 last:border-r-0">
+                <div className={`text-xs font-bold uppercase tracking-wide ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+                  {day.toLocaleDateString('en-US', { weekday: 'short' })}
+                  <div className={`text-base font-semibold mt-0.5 ${isToday ? 'text-blue-600' : 'text-gray-800'}`}>
+                    {day.getDate()}
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="grid grid-cols-8 relative">
-        <div className="border-r py-2 px-3 text-xs text-gray-600 font-medium border-b bg-gray-50">all-day</div>
-        {weekDays.map((day, i) => (
-          <div key={i} className="border-r last:border-r-0 border-b min-h-[80px] bg-white"></div>
-        ))}
-        <div className="absolute top-0 left-0 right-0 pt-2 px-2 space-y-1 pointer-events-none" style={{ marginLeft: '12.5%' }}>
-          {weekEvents.map((event) => (
-            <div
-              key={event.id}
-              className={`text-xs px-2 py-1 text-white truncate pointer-events-auto cursor-pointer rounded ${RESERVATION_STATUS[event.status].color}`}
-              style={{
-                marginLeft: `${event.startDay * 12.5}%`,
-                width: `${event.span * 12.5}%`
-              }}
-              title={`${event.user.firstName} ${event.user.lastName} - ${event.vehicle.brand} ${event.vehicle.model} (${event.vehicle.licensePlate})`}
-            >
-              {event.user.firstName} {event.user.lastName} - {event.vehicle.brand} {event.vehicle.model}
-            </div>
-          ))}
+            );
+          })}
         </div>
-      </div>
-      <div className="max-h-[600px] overflow-y-auto">
-        <div className="grid grid-cols-8">
-          <div className="border-r">
-            {hours.map(hour => (
-              <div key={hour} className="py-4 px-3 text-xs text-gray-600 border-b">
-                {hour === 0 ? '12am' : hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour - 12}pm`}
+        <div className="grid grid-cols-8 relative">
+          <div className="border-r border-gray-200 py-2.5 px-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b bg-gray-50 text-center">all-day</div>
+          {weekDays.map((day, i) => (
+            <div key={i} className="border-r border-gray-200 last:border-r-0 border-b min-h-[85px] bg-white"></div>
+          ))}
+          <div className="absolute top-0 left-0 right-0 pt-2.5 px-2 space-y-1.5 pointer-events-none" style={{ marginLeft: '12.5%' }}>
+            {weekEvents.map((event) => (
+              <div
+                key={event.id}
+                className={`text-[11px] font-medium px-2 py-1.5 text-white truncate pointer-events-auto cursor-pointer rounded-md shadow-sm hover:opacity-90 ${RESERVATION_STATUS[event.status].color}`}
+                style={{
+                  marginLeft: `${event.startDay * 12.5}%`,
+                  width: `calc(${event.span * 12.5}% - 4px)`
+                }}
+                title={`${event.user.firstName} ${event.user.lastName} - ${event.vehicle.brand} ${event.vehicle.model} (${event.vehicle.licensePlate})`}
+              >
+                {event.vehicle.brand} {event.vehicle.model} ({event.user.firstName})
               </div>
             ))}
           </div>
-          {weekDays.map((day, i) => (
-            <div key={i} className="border-r last:border-r-0">
+        </div>
+        <div className="max-h-[500px] overflow-y-auto w-full custom-scrollbar">
+          <div className="grid grid-cols-8 min-w-[800px]">
+            <div className="border-r border-gray-200 bg-gray-50/50">
               {hours.map(hour => (
-                <div key={hour} className="py-4 px-2 border-b bg-white hover:bg-blue-50"></div>
+                <div key={hour} className="h-16 relative border-b border-gray-200">
+                  <span className="absolute -top-2.5 right-2 text-[10px] font-semibold text-gray-400">
+                    {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                  </span>
+                </div>
               ))}
             </div>
-          ))}
+            {weekDays.map((day, i) => (
+              <div key={i} className="border-r border-gray-200 last:border-r-0">
+                {hours.map(hour => (
+                  <div key={hour} className="h-16 border-b border-gray-200 bg-white hover:bg-gray-50 transition-colors"></div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

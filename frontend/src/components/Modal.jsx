@@ -25,42 +25,64 @@ const Modal = ({ isOpen, onClose, title, children, size = "max-w-2xl" }) => {
 
   if (!show) return null;
 
-  if (!show) return null;
-
   return createPortal(
     <>
+      {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black transition-opacity duration-300 ${
           animate ? "bg-opacity-50" : "bg-opacity-0"
         }`}
-        style={{ zIndex: 99999 }}
+        style={{ zIndex: 99998 }}
         onClick={onClose}
       />
 
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[99999]">
+      {/* Modal container — centers on md+, bottom-sheet on mobile */}
+      <div
+        className="fixed inset-0 flex items-end sm:items-center justify-center pointer-events-none"
+        style={{ zIndex: 99999 }}
+      >
         <div
-          className={`relative bg-white rounded-xl shadow-2xl ${size} w-full mx-4 pointer-events-auto transition-all duration-300 ${
-            animate
-              ? "opacity-100 scale-100 translate-y-0"
-              : "opacity-0 scale-95 translate-y-4"
-          }`}
+          className={`
+            relative bg-white w-full pointer-events-auto
+            transition-all duration-300
+            /* Mobile: slide up from bottom, full-width, rounded top corners */
+            rounded-t-2xl sm:rounded-xl
+            max-h-[92vh] sm:max-h-[90vh]
+            flex flex-col
+            /* Desktop: use size prop + horizontal margin */
+            sm:${size} sm:mx-4
+            ${
+              animate
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-8 sm:translate-y-4 sm:scale-95"
+            }
+          `}
+          style={{
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          }}
         >
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex-shrink-0">
+            {/* Mobile drag indicator */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-200 rounded-full sm:hidden" />
 
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-800 pr-4 leading-tight">
+              {title}
+            </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 hover:bg-gray-100 rounded-lg flex-shrink-0"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          <div className="p-6">{children}</div>
+          {/* Scrollable content */}
+          <div className="p-5 sm:p-6 overflow-y-auto flex-1">{children}</div>
         </div>
       </div>
     </>,
-    document.body,
+    document.body
   );
 };
 

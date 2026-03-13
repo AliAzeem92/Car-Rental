@@ -86,10 +86,10 @@ const FiltersSidebar = ({ categories = [] }) => {
       {/* Price Range Filter */}
       <div className="mb-6">
         <h4 className="font-semibold text-[#192336] mb-3">Price / Day</h4>
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <label className="block text-sm text-[#6d6e71] mb-1">Min</label>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-[#6d6e71] mb-1.5">Min Price</label>
               <input
                 type="number"
                 value={priceRange[0]}
@@ -98,10 +98,11 @@ const FiltersSidebar = ({ categories = [] }) => {
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004aad] focus:border-transparent text-sm"
                 placeholder="$0"
+                min="0"
               />
             </div>
-            <div className="flex-1">
-              <label className="block text-sm text-[#6d6e71] mb-1">Max</label>
+            <div>
+              <label className="block text-xs text-[#6d6e71] mb-1.5">Max Price</label>
               <input
                 type="number"
                 value={priceRange[1]}
@@ -113,38 +114,12 @@ const FiltersSidebar = ({ categories = [] }) => {
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#004aad] focus:border-transparent text-sm"
                 placeholder="$500"
+                min="0"
               />
             </div>
           </div>
-
-          {/* Price Range Slider */}
-          <div className="relative">
-            <input
-              type="range"
-              min="0"
-              max="500"
-              value={priceRange[0]}
-              onChange={(e) =>
-                setPriceRange([parseInt(e.target.value), priceRange[1]])
-              }
-              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-              style={{ zIndex: 1 }}
-            />
-            <input
-              type="range"
-              min="0"
-              max="500"
-              value={priceRange[1]}
-              onChange={(e) =>
-                setPriceRange([priceRange[0], parseInt(e.target.value)])
-              }
-              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-              style={{ zIndex: 2 }}
-            />
-            <div className="flex justify-between text-sm text-[#6d6e71] mt-6">
-              <span>${priceRange[0]}</span>
-              <span>${priceRange[1]}</span>
-            </div>
+          <div className="flex items-center justify-between text-xs text-[#6d6e71] pt-1">
+            <span>Range: ${priceRange[0]} - ${priceRange[1]}</span>
           </div>
         </div>
       </div>

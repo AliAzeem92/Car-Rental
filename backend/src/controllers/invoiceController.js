@@ -6,7 +6,7 @@ export const generateInvoice = async (req, res) => {
   try {
     const { reservationId } = req.params;
 
-    const pdfBuffer = await generateInvoicePDF(parseInt(reservationId));
+    const pdfBuffer = await generateInvoicePDF(reservationId);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=invoice-${reservationId}.pdf`);

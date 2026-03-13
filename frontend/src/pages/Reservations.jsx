@@ -8,6 +8,7 @@ import {
   Eye,
   Edit,
   Download,
+  ChevronDown,
 } from "lucide-react";
 import {
   reservationAPI,
@@ -39,6 +40,7 @@ const Reservations = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [loadingStates, setLoadingStates] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
     vehicleId: "",
     customerId: "",
@@ -99,7 +101,6 @@ const Reservations = () => {
       } else {
         await reservationAPI.updateStatus(id, status);
 
-        // If status is COMPLETED, show check-in modal
         if (status === "COMPLETED") {
           const reservation = reservations.find((r) => r.id === id);
           if (reservation && !reservation.checkin) {
@@ -137,7 +138,7 @@ const Reservations = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        },
+        }
       );
 
       if (!response.ok) throw new Error("Failed to generate invoice");
@@ -195,95 +196,124 @@ const Reservations = () => {
   const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
   const paginatedReservations = filteredReservations.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Reservations</h1>
+    <div className="space-y-5 page-enter">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+          Reservations
+        </h1>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition"
+          className="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors shadow-sm text-sm sm:text-base w-full sm:w-auto"
         >
           <Plus className="w-5 h-5" /> Create Reservation
         </button>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name or vehicle..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+      {/* ── Filters ── */}
+      <div className="space-y-3">
+        {/* Search + filter toggle row */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by name or vehicle..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+
+          {/* Mobile: toggle extra filters */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="sm:hidden flex items-center gap-1.5 px-3 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-50 text-sm transition-colors flex-shrink-0"
+          >
+            <Grid className="w-4 h-4 text-gray-600" />
+            <ChevronDown
+              className={`w-4 h-4 text-gray-600 transition-transform ${
+                showFilters ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {/* Desktop filter selects inline */}
+          <div className="hidden sm:flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            >
+              <option>All Statuses</option>
+              <option>Pending</option>
+              <option>Confirmed</option>
+              <option>Ongoing</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+            <select className="px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+              <option>All Vehicles</option>
+            </select>
+            <select className="px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+              <option>This Month</option>
+            </select>
+          </div>
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        >
-          <option>All Statuses</option>
-          <option>Pending</option>
-          <option>Confirmed</option>
-          <option>Ongoing</option>
-          <option>Completed</option>
-          <option>Cancelled</option>
-        </select>
-        <select className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option>All Vehicles</option>
-        </select>
-        <select className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-          <option>This Month</option>
-        </select>
-        <button className="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-50">
-          <Grid className="w-5 h-5 text-gray-600" />
-        </button>
-        <button className="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-50">
-          <X className="w-5 h-5 text-gray-600" />
-        </button>
-        <button className="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-50">
-          <Calendar className="w-5 h-5 text-gray-600" />
-        </button>
+
+        {/* Mobile expanded filters */}
+        {showFilters && (
+          <div className="sm:hidden grid grid-cols-1 gap-2 animate-slideDown">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            >
+              <option>All Statuses</option>
+              <option>Pending</option>
+              <option>Confirmed</option>
+              <option>Ongoing</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+            <select className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+              <option>All Vehicles</option>
+            </select>
+            <select className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm">
+              <option>This Month</option>
+            </select>
+          </div>
+        )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <table className="w-full">
+      {/* ── Table ── */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 table-responsive min-h-[350px] pb-12">
+        <table className="w-full" style={{ minWidth: "860px" }}>
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Reference #
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Customer
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Vehicle
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Pick-Up
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Return
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Days
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Total
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Payment
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Status
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Actions
-              </th>
+              {[
+                "Reference #",
+                "Customer",
+                "Vehicle",
+                "Pick-Up",
+                "Return",
+                "Days",
+                "Total",
+                "Payment",
+                "Status",
+                "Actions",
+              ].map((col) => (
+                <th
+                  key={col}
+                  className="px-4 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap"
+                >
+                  {col}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody
@@ -296,7 +326,9 @@ const Reservations = () => {
                 <td colSpan="10" className="px-6 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-500" />
-                    <p className="text-gray-500 text-sm">Loading reservations...</p>
+                    <p className="text-gray-500 text-sm">
+                      Loading reservations...
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -304,7 +336,7 @@ const Reservations = () => {
               <tr>
                 <td
                   colSpan="10"
-                  className="px-6 py-12 text-center text-gray-500"
+                  className="px-6 py-12 text-center text-gray-500 text-sm"
                 >
                   No reservations found
                 </td>
@@ -313,32 +345,32 @@ const Reservations = () => {
               paginatedReservations.map((reservation) => (
                 <tr
                   key={reservation.id}
-                  className="hover:bg-gray-50 transition"
+                  className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="px-6 py-4">
-                    <span className="text-blue-600 text-xs ">
+                  <td className="px-4 py-3.5">
+                    <span className="text-blue-600 text-xs font-mono">
                       {reservation.contractNumber}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-800 text-xs">
+                  <td className="px-4 py-3.5 text-gray-800 text-xs whitespace-nowrap">
                     {reservation.user?.firstName} {reservation.user?.lastName}
                   </td>
-                  <td className="px-6 py-4 text-gray-800 text-xs">
+                  <td className="px-4 py-3.5 text-gray-800 text-xs whitespace-nowrap">
                     {reservation.vehicle?.brand} {reservation.vehicle?.model}
                   </td>
-                  <td className="px-6 py-4 text-gray-800 text-xs">
+                  <td className="px-4 py-3.5 text-gray-800 text-xs whitespace-nowrap">
                     {formatDate(reservation.startDate)}
                   </td>
-                  <td className="px-6 py-4 text-gray-800 text-xs">
+                  <td className="px-4 py-3.5 text-gray-800 text-xs whitespace-nowrap">
                     {formatDate(reservation.endDate)}
                   </td>
-                  <td className="px-6 py-4 text-gray-800 text-xs text-center">
+                  <td className="px-4 py-3.5 text-gray-800 text-xs text-center">
                     {calculateDays(reservation.startDate, reservation.endDate)}
                   </td>
-                  <td className="px-6 py-4 text-blue-600 text-xs font-semibold">
+                  <td className="px-4 py-3.5 text-blue-600 text-xs font-semibold whitespace-nowrap">
                     €{reservation.totalPrice.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3.5">
                     <StatusDropdown
                       value={reservation.paymentStatus || "UNPAID"}
                       onChange={handleStatusChange}
@@ -347,7 +379,7 @@ const Reservations = () => {
                       loading={loadingStates[`${reservation.id}-payment`]}
                     />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3.5">
                     <StatusDropdown
                       value={reservation.status}
                       onChange={handleStatusChange}
@@ -356,30 +388,30 @@ const Reservations = () => {
                       loading={loadingStates[`${reservation.id}-status`]}
                     />
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => setViewModal(reservation)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition"
+                        className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg transition-colors"
                         title="View Details"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => setEditModal(reservation)}
-                        className="border border-gray-300 hover:bg-gray-50 text-gray-700 p-2 rounded-lg transition"
+                        className="border border-gray-300 hover:bg-gray-50 text-gray-700 p-2 rounded-lg transition-colors"
                         title="Edit"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3.5 h-3.5" />
                       </button>
                       {(reservation.status === "CONFIRMED" ||
                         reservation.status === "COMPLETED") && (
                         <button
                           onClick={() => handleDownloadInvoice(reservation.id)}
-                          className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition"
+                          className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg transition-colors"
                           title="Download Invoice"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
@@ -391,17 +423,18 @@ const Reservations = () => {
         </table>
       </div>
 
-      <div className="flex justify-between items-center text-sm text-gray-600">
-        <span>
-          Showing {(currentPage - 1) * itemsPerPage + 1}-
+      {/* ── Pagination ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-gray-600">
+        <span className="text-center sm:text-left">
+          Showing {(currentPage - 1) * itemsPerPage + 1}–
           {Math.min(currentPage * itemsPerPage, filteredReservations.length)} of{" "}
           {filteredReservations.length}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-1.5 flex-wrap">
           <button
             onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
           >
             Previous
           </button>
@@ -409,8 +442,10 @@ const Reservations = () => {
             <button
               key={i + 1}
               onClick={() => handlePageChange(i + 1)}
-              className={`px-3 py-1 border rounded hover:bg-gray-50 ${
-                currentPage === i + 1 ? "bg-blue-500 text-white" : ""
+              className={`px-3 py-1.5 border rounded-lg text-xs transition-colors ${
+                currentPage === i + 1
+                  ? "bg-blue-500 text-white border-blue-500"
+                  : "hover:bg-gray-50"
               }`}
             >
               {i + 1}
@@ -421,26 +456,27 @@ const Reservations = () => {
               handlePageChange(Math.min(totalPages, currentPage + 1))
             }
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
           >
             Next
           </button>
         </div>
       </div>
 
+      {/* ── Create Modal ── */}
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         title="New Reservation"
       >
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <select
               value={formData.vehicleId}
               onChange={(e) =>
                 setFormData({ ...formData, vehicleId: e.target.value })
               }
-              className="border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               required
             >
               <option value="">Select Vehicle</option>
@@ -455,7 +491,7 @@ const Reservations = () => {
               onChange={(e) =>
                 setFormData({ ...formData, customerId: e.target.value })
               }
-              className="border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               required
             >
               <option value="">Select Customer</option>
@@ -471,7 +507,7 @@ const Reservations = () => {
               onChange={(e) =>
                 setFormData({ ...formData, startDate: e.target.value })
               }
-              className="border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               required
             />
             <input
@@ -480,7 +516,7 @@ const Reservations = () => {
               onChange={(e) =>
                 setFormData({ ...formData, endDate: e.target.value })
               }
-              className="border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               required
             />
             <input
@@ -490,7 +526,7 @@ const Reservations = () => {
               onChange={(e) =>
                 setFormData({ ...formData, totalPrice: e.target.value })
               }
-              className="border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               required
             />
             <input
@@ -500,21 +536,21 @@ const Reservations = () => {
               onChange={(e) =>
                 setFormData({ ...formData, depositPaid: e.target.value })
               }
-              className="border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               required
             />
           </div>
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 font-medium transition"
+              className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl hover:bg-blue-700 font-medium transition-colors text-sm"
             >
               Create Reservation
             </button>
             <button
               type="button"
               onClick={() => setShowModal(false)}
-              className="flex-1 bg-gray-200 text-gray-700 py-2.5 rounded-lg hover:bg-gray-300 font-medium transition"
+              className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 font-medium transition-colors text-sm"
             >
               Cancel
             </button>
@@ -522,144 +558,158 @@ const Reservations = () => {
         </form>
       </Modal>
 
+      {/* ── View Modal ── */}
       <Modal
         isOpen={!!viewModal}
         onClose={() => setViewModal(null)}
         title="Reservation Details"
+        size="max-w-xl"
       >
         {viewModal && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Contract Number
                 </label>
-                <p className="text-gray-900">{viewModal.contractNumber}</p>
+                <p className="text-gray-900 font-mono text-sm mt-0.5">
+                  {viewModal.contractNumber}
+                </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Status
                 </label>
-                <p className="text-gray-900">{viewModal.status}</p>
+                <p className="mt-0.5">
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                      statusColors[viewModal.status] ||
+                      "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {viewModal.status}
+                  </span>
+                </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Customer
                 </label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 text-sm mt-0.5">
                   {viewModal.user?.firstName} {viewModal.user?.lastName}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Vehicle
                 </label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 text-sm mt-0.5">
                   {viewModal.vehicle?.brand} {viewModal.vehicle?.model}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Pick-Up Date
                 </label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 text-sm mt-0.5">
                   {formatDate(viewModal.startDate)}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Return Date
                 </label>
-                <p className="text-gray-900">{formatDate(viewModal.endDate)}</p>
+                <p className="text-gray-900 text-sm mt-0.5">
+                  {formatDate(viewModal.endDate)}
+                </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Pickup Location
                 </label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 text-sm mt-0.5">
                   {viewModal.pickupLocation || viewModal.destination || "N/A"}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Return Location
                 </label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 text-sm mt-0.5">
                   {viewModal.returnLocation || viewModal.destination || "N/A"}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
-                  Original Rental Price
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  Rental Price
                 </label>
-                <p className="text-gray-900 font-semibold">
+                <p className="text-gray-900 font-semibold text-sm mt-0.5">
                   €{viewModal.totalPrice.toFixed(2)}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Deposit Paid
                 </label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 text-sm mt-0.5">
                   €{viewModal.depositPaid.toFixed(2)}
                 </p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Extra Charges
                 </label>
-                <p className="text-gray-900 font-semibold">
+                <p className="text-gray-900 font-semibold text-sm mt-0.5">
                   €{viewModal.checkin?.extraCharges?.toFixed(2) || "0.00"}
                 </p>
               </div>
-              <div className="col-span-2">
-                <label className="text-sm font-semibold text-gray-600">
+              <div className="sm:col-span-2 bg-blue-50 rounded-xl p-4">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   Final Total Price
                 </label>
-                <p className="text-blue-600 text-xl font-bold">
+                <p className="text-blue-600 text-2xl font-bold mt-1">
                   €
                   {(
-                    viewModal.totalPrice +
-                    (viewModal.checkin?.extraCharges || 0)
+                    viewModal.totalPrice + (viewModal.checkin?.extraCharges || 0)
                   ).toFixed(2)}
                 </p>
               </div>
             </div>
 
-            {/* Check-In Details Section */}
-            <div className="border-t border-gray-200 pt-4 mt-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            {/* Check-In Details */}
+            <div className="border-t border-gray-100 pt-4 mt-2">
+              <h3 className="text-base font-semibold text-gray-800 mb-3">
                 Check-In Details
               </h3>
               {viewModal.checkin ? (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Mileage In
                     </label>
-                    <p className="text-gray-900">
+                    <p className="text-gray-900 text-sm mt-0.5">
                       {viewModal.checkin.mileageIn?.toLocaleString()} km
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Extra Charges
                     </label>
-                    <p className="text-gray-900">
+                    <p className="text-gray-900 text-sm mt-0.5">
                       €{viewModal.checkin.extraCharges?.toFixed(2) || "0.00"}
                     </p>
                   </div>
-                  <div className="col-span-2">
-                    <label className="text-sm font-semibold text-gray-600">
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                       Damage Report
                     </label>
-                    <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
+                    <p className="text-gray-900 bg-gray-50 p-3 rounded-xl text-sm mt-1">
                       {viewModal.checkin.damageReport || "No damage reported"}
                     </p>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500 italic">
+                <p className="text-gray-500 italic text-sm">
                   Vehicle has not been checked in yet.
                 </p>
               )}
@@ -668,6 +718,7 @@ const Reservations = () => {
         )}
       </Modal>
 
+      {/* ── Edit Modal ── */}
       <Modal
         isOpen={!!editModal}
         onClose={() => setEditModal(null)}
@@ -678,10 +729,7 @@ const Reservations = () => {
             onSubmit={async (e) => {
               e.preventDefault();
               try {
-                await reservationAPI.updateStatus(
-                  editModal.id,
-                  editModal.status,
-                );
+                await reservationAPI.updateStatus(editModal.id, editModal.status);
                 setEditModal(null);
                 loadData();
               } catch (error) {
@@ -689,20 +737,18 @@ const Reservations = () => {
               }
             }}
           >
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-600 mb-2">
                   Start Date
                 </label>
                 <input
                   type="datetime-local"
-                  value={new Date(editModal.startDate)
-                    .toISOString()
-                    .slice(0, 16)}
+                  value={new Date(editModal.startDate).toISOString().slice(0, 16)}
                   onChange={(e) =>
                     setEditModal({ ...editModal, startDate: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
               <div>
@@ -715,7 +761,7 @@ const Reservations = () => {
                   onChange={(e) =>
                     setEditModal({ ...editModal, endDate: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
               <div>
@@ -728,7 +774,7 @@ const Reservations = () => {
                   onChange={(e) =>
                     setEditModal({ ...editModal, totalPrice: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
               <div>
@@ -741,21 +787,21 @@ const Reservations = () => {
                   onChange={(e) =>
                     setEditModal({ ...editModal, depositPaid: e.target.value })
                   }
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
             </div>
-            <div className="mt-6 flex gap-4">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 font-medium transition"
+                className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl hover:bg-blue-700 font-medium transition-colors text-sm"
               >
                 Save Changes
               </button>
               <button
                 type="button"
                 onClick={() => setEditModal(null)}
-                className="flex-1 bg-gray-200 text-gray-700 py-2.5 rounded-lg hover:bg-gray-300 font-medium transition"
+                className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 font-medium transition-colors text-sm"
               >
                 Cancel
               </button>

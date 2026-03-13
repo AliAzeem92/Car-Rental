@@ -42,7 +42,7 @@ export const updateCustomer = async (req, res) => {
     }
 
     const customer = await prisma.user.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: updateData
     });
 
@@ -64,7 +64,7 @@ export const uploadProfileImage = async (req, res) => {
     const imageUrl = await uploadToCloudinary(req.file.buffer, 'profiles');
 
     const customer = await prisma.user.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: { profileImageUrl: imageUrl }
     });
 
@@ -77,10 +77,10 @@ export const uploadProfileImage = async (req, res) => {
 export const toggleBlacklist = async (req, res) => {
   try {
     const { id } = req.params;
-    const customer = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+    const customer = await prisma.user.findUnique({ where: { id } });
     
     const updated = await prisma.user.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: { isBlacklisted: !customer.isBlacklisted }
     });
 

@@ -1,29 +1,46 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Create reusable transporter
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT) || 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+};
 
-// Verify API key on startup
-if (!process.env.RESEND_API_KEY) {
-  console.error('❌ RESEND_API_KEY is not set. Emails will not be sent.');
+// Verify transporter on startup
+if (process.env.EMAIL_USER) {
+  console.log('✅ NodeMailer email service initialized');
 } else {
-  console.log('✅ Resend email service initialized');
+  console.warn('⚠️ EMAIL_USER is not set. Emails will not be sent.');
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Car Rental <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'Car Rental <noreply@carrental.com>';
 
-const sendEmail = async (to, subject, html) => {
-  const { data, error } = await resend.emails.send({
+/**
+ * Core send email function
+ * @param {string} to - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} html - HTML body
+ */
+export const sendEmail = async (to, subject, html) => {
+  const transporter = createTransporter();
+  const info = await transporter.sendMail({
     from: FROM_EMAIL,
     to,
     subject,
     html,
   });
-
-  if (error) {
-    throw new Error(`Resend error: ${error.message}`);
-  }
-
-  return data;
+  console.log(`📧 Email sent: ${info.messageId}`);
+  return info;
 };
 
 export const sendResetCode = async (email, code) => {
@@ -152,4 +169,35 @@ export const sendReservationCancelled = async (email, customerName, vehicleName,
   }
 };
 
-export default resend;
+export const sendAdminCancellationNotification = async (
+  adminEmail,
+  adminName,
+  customerName,
+  vehicleName,
+  startDate,
+  endDate,
+  contractNumber,
+  reservationId
+) => {
+  try {
+    await sendEmail(adminEmail, 'Customer Cancelled a Confirmed Reservation', `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #EF4444;">Customer Cancelled a Confirmed Reservation</h2>
+        <p>Hello ${adminName},</p>
+        <p>The following reservation has been cancelled by the customer.</p>
+        <div style="background: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 8px 0;"><strong>Vehicle:</strong> ${vehicleName}</p>
+          <p style="margin: 8px 0;"><strong>Reservation ID:</strong> ${reservationId}</p>
+          <p style="margin: 8px 0;"><strong>Customer Name:</strong> ${customerName}</p>
+          <p style="margin: 8px 0;"><strong>Pickup Date:</strong> ${new Date(startDate).toLocaleDateString()}</p>
+          <p style="margin: 8px 0;"><strong>Return Date:</strong> ${new Date(endDate).toLocaleDateString()}</p>
+        </div>
+        <p>Please review the reservation in the admin panel.</p>
+      </div>
+    `);
+  } catch (error) {
+    console.error('Failed to send admin cancellation notification:', error.message);
+  }
+};
+
+export default sendEmail;

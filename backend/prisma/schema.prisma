@@ -3,15 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model user {
-  id                       Int                        @id @default(autoincrement())
+  id                       String                     @id @default(auto()) @map("_id") @db.ObjectId
   email                    String                     @unique
   password                 String
-  role                     user_role                  @default(CUSTOMER)
+  role                     String                     @default("CUSTOMER")
   firstName                String?
   lastName                 String?
   phone                    String?
@@ -33,69 +33,58 @@ model user {
 }
 
 model passwordreset {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
   code      String
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model checkout {
-  id            Int         @id @default(autoincrement())
-  reservationId Int         @unique
-  vehicleId     Int
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  reservationId String      @unique
+  vehicleId     String
   mileageOut    Int
   createdAt     DateTime    @default(now())
-  createdBy     Int
+  createdBy     String
   reservation   reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   vehicle       vehicle     @relation(fields: [vehicleId], references: [id])
   user          user        @relation(fields: [createdBy], references: [id])
-
-  @@index([vehicleId])
-  @@index([createdBy])
 }
 
 model checkin {
-  id            Int         @id @default(autoincrement())
-  reservationId Int         @unique
-  vehicleId     Int
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  reservationId String      @unique
+  vehicleId     String
   mileageIn     Int
   damageReport  String?
   extraCharges  Float       @default(0)
   createdAt     DateTime    @default(now())
-  createdBy     Int
+  createdBy     String
   reservation   reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
   vehicle       vehicle     @relation(fields: [vehicleId], references: [id])
   user          user        @relation(fields: [createdBy], references: [id])
-
-  @@index([vehicleId])
-  @@index([createdBy])
 }
 
 model maintenance {
-  id          Int              @id @default(autoincrement())
-  vehicleId   Int
-  type        maintenance_type
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId   String
+  type        String
   dueDate     DateTime
   dueMileage  Int?
-  isCompleted Boolean          @default(false)
-  isDeleted   Boolean          @default(false)
+  isCompleted Boolean  @default(false)
+  isDeleted   Boolean  @default(false)
   completedAt DateTime?
   deletedAt   DateTime?
-  vehicle     vehicle          @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-
-  @@index([vehicleId])
-  @@index([isDeleted])
+  vehicle     vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 }
 
 model reservation {
-  id                   Int                        @id @default(autoincrement())
-  vehicleId            Int
-  userId               Int
+  id                   String                     @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId            String
+  userId               String
   startDate            DateTime
   endDate              DateTime
   destination          String?
@@ -103,8 +92,8 @@ model reservation {
   returnLocation       String?
   totalPrice           Float
   depositPaid          Float
-  paymentStatus        payment_status             @default(UNPAID)
-  status               reservation_status         @default(PENDING)
+  paymentStatus        String                     @default("UNPAID")
+  status               String                     @default("PENDING")
   contractNumber       String                     @unique
   contractPdfUrl       String?
   createdAt            DateTime                   @default(now())
@@ -114,123 +103,77 @@ model reservation {
   vehicle              vehicle                    @relation(fields: [vehicleId], references: [id])
   statusHistory        reservationstatushistory[]
   paymentHistory       paymentstatushistory[]
-
-  @@index([userId])
-  @@index([vehicleId])
-  @@index([startDate])
-  @@index([endDate])
-  @@index([status])
 }
 
 model reservationstatushistory {
-  id            Int                @id @default(autoincrement())
-  reservationId Int
-  fromStatus    reservation_status
-  toStatus      reservation_status
-  changedBy     Int
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  reservationId String
+  fromStatus    String
+  toStatus      String
+  changedBy     String
   reason        String?
-  createdAt     DateTime           @default(now())
-  reservation   reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-  user          user               @relation(fields: [changedBy], references: [id])
-
-  @@index([reservationId])
-  @@index([changedBy])
+  createdAt     DateTime @default(now())
+  reservation   reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user          user        @relation(fields: [changedBy], references: [id])
 }
 
 model paymentstatushistory {
-  id            Int            @id @default(autoincrement())
-  reservationId Int
-  fromStatus    payment_status
-  toStatus      payment_status
-  changedBy     Int
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  reservationId String
+  fromStatus    String
+  toStatus      String
+  changedBy     String
   reason        String?
-  createdAt     DateTime       @default(now())
-  reservation   reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-  user          user           @relation(fields: [changedBy], references: [id])
-
-  @@index([reservationId])
-  @@index([changedBy])
+  createdAt     DateTime @default(now())
+  reservation   reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  user          user        @relation(fields: [changedBy], references: [id])
 }
 
 model vehicle {
-  id                    Int            @id @default(autoincrement())
-  brand                 String
-  model                 String
-  year                  Int?
-  licensePlate          String         @unique
-  category              String
-  color                 String?
-  seats                 Int?
-  transmission          String?
-  fuelType              String?
-  description           String?        @db.Text
-  features              String?        @db.Text
-  dailyPrice            Float
-  deposit               Float
-  currentMileage        Int            @default(0)
-  status                vehicle_status @default(AVAILABLE)
-  isAvailable           Boolean        @default(true)
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-  maintenance           maintenance[]
-  reservation           reservation[]
-  vehicleimage          vehicleimage[]
-  checkouts             checkout[]
-  checkins              checkin[]
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  brand          String
+  model          String
+  year           Int?
+  licensePlate   String         @unique
+  category       String
+  color          String?
+  seats          Int?
+  transmission   String?
+  fuelType       String?
+  description    String?
+  features       String?
+  dailyPrice     Float
+  deposit        Float
+  currentMileage Int            @default(0)
+  status         String         @default("AVAILABLE")
+  isAvailable    Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  maintenance    maintenance[]
+  reservation    reservation[]
+  vehicleimage   vehicleimage[]
+  checkouts      checkout[]
+  checkins       checkin[]
 }
 
 model vehicleimage {
-  id        Int     @id @default(autoincrement())
-  vehicleId Int
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  vehicleId String
   imageUrl  String
   vehicle   vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-
-  @@index([vehicleId])
 }
 
 model invoicesettings {
-  id                Int      @id @default(autoincrement())
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
   companyName       String   @default("Car Rental Company")
   ownerName         String?
-  companyAddress    String?  @db.Text
+  companyAddress    String?
   companyPhone      String?
   companyEmail      String?
   companyLogoUrl    String?
-  termsConditions   String?  @db.Text
-  footerMessage     String?  @db.Text
+  termsConditions   String?
+  footerMessage     String?
   adminSignatureUrl String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-}
-
-enum user_role {
-  ADMIN
-  CUSTOMER
-}
-
-enum maintenance_type {
-  INSURANCE
-  OIL_CHANGE
-  SERVICE
-}
-
-enum reservation_status {
-  PENDING
-  CONFIRMED
-  ONGOING
-  COMPLETED
-  CANCELLED
-}
-
-enum vehicle_status {
-  AVAILABLE
-  RESERVED
-  RENTED
-  MAINTENANCE
-}
-
-enum payment_status {
-  PAID
-  UNPAID
-  PARTIAL
 }

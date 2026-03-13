@@ -64,7 +64,7 @@ export const generateInvoicePDF = async (reservationId) => {
 
       doc.fontSize(10)
          .fillColor(secondaryColor)
-         .text(`Invoice #: INV-${reservation.id.toString().padStart(6, '0')}`, 350, 80, { align: 'right' })
+         .text(`Invoice #: INV-${reservation.id}`, 350, 80, { align: 'right' })
          .text(`Contract #: ${reservation.contractNumber}`, 350, 95, { align: 'right' })
          .text(`Date: ${new Date().toLocaleDateString()}`, 350, 110, { align: 'right' });
 
