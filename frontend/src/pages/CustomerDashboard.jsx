@@ -23,7 +23,6 @@ import {
   Clock,
   Camera,
 } from "lucide-react";
-import axios from "axios";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { useFilter } from "../context/FilterContext";
@@ -198,8 +197,8 @@ const CustomerDashboard = () => {
     setLoadingVehicles(true);
     try {
       const [vehiclesRes, contactRes] = await Promise.all([
-        axios.get("/api/vehicles?customerView=true", { withCredentials: true }),
-        axios.get("/api/public/admin-contact"),
+        api.get("/vehicles?customerView=true"),
+        api.get("/public/admin-contact"),
       ]);
       setVehicles(vehiclesRes.data.filter((v) => v.status === "AVAILABLE"));
       setContactInfo(contactRes.data);

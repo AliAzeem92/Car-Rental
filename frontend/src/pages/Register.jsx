@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../services/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Register = () => {
 
     try {
       // Register the user
-      await axios.post('/api/auth/register', formData, { withCredentials: true });
+      await api.post('/auth/register', formData);
       
       // Auto-login after successful registration
       await login({ email: formData.email, password: formData.password });
