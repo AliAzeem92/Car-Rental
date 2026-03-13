@@ -1,11 +1,15 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  pool: true,
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // SSL - most reliable on cloud providers
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // Prevent TLS cert issues on Railway
   }
 });
 
@@ -13,7 +17,7 @@ const transporter = nodemailer.createTransport({
 transporter.verify((error) => {
   if (error) {
     console.error('❌ SMTP connection failed:', error.message);
-    console.error('   Check EMAIL_USER and EMAIL_PASS environment variables on Railway.');
+    console.error('   Check EMAIL_USER and EMAIL_PASS on Railway.');
   } else {
     console.log('✅ SMTP server is ready to send emails');
   }
