@@ -5,6 +5,35 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 const prisma = new PrismaClient();
 
+export const pushDatabase = async (req, res) => {
+  try {
+    console.log('🔄 Running database push...');
+    
+    // Run prisma db push
+    const { stdout, stderr } = await execAsync('npx prisma db push --accept-data-loss');
+    
+    console.log('✅ Database push completed!');
+    console.log(stdout);
+    
+    if (stderr) {
+      console.error('Push warnings:', stderr);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Database pushed successfully',
+      output: stdout
+    });
+  } catch (error) {
+    console.error('❌ Push failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      details: error.stderr || error.stdout
+    });
+  }
+};
+
 export const runMigrations = async (req, res) => {
   try {
     console.log('🔄 Running database migrations...');

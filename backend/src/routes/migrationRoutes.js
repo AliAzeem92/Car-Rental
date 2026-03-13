@@ -1,5 +1,5 @@
 import express from 'express';
-import { runMigrations, seedDatabase } from '../controllers/migrationController.js';
+import { runMigrations, seedDatabase, pushDatabase } from '../controllers/migrationController.js';
 
 const router = express.Router();
 
@@ -14,6 +14,7 @@ const checkMigrationAccess = (req, res, next) => {
 };
 
 router.post('/migrate', checkMigrationAccess, runMigrations);
+router.post('/push', checkMigrationAccess, pushDatabase);
 router.post('/seed', checkMigrationAccess, seedDatabase);
 
 export default router;
