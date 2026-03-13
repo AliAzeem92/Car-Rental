@@ -38,6 +38,7 @@ const Reservations = () => {
   const [itemsPerPage] = useState(5);
   const [isAnimating, setIsAnimating] = useState(false);
   const [loadingStates, setLoadingStates] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     vehicleId: "",
     customerId: "",
@@ -52,6 +53,7 @@ const Reservations = () => {
   }, []);
 
   const loadData = async () => {
+    setIsLoading(true);
     try {
       const [resData, vehData, custData] = await Promise.all([
         reservationAPI.getAll(),
@@ -63,6 +65,8 @@ const Reservations = () => {
       setCustomers(custData.data || []);
     } catch (error) {
       console.error("Failed to load data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -287,7 +291,16 @@ const Reservations = () => {
               isAnimating ? "opacity-0" : "opacity-100"
             }`}
           >
-            {paginatedReservations.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan="10" className="px-6 py-16 text-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-500" />
+                    <p className="text-gray-500 text-sm">Loading reservations...</p>
+                  </div>
+                </td>
+              </tr>
+            ) : paginatedReservations.length === 0 ? (
               <tr>
                 <td
                   colSpan="10"

@@ -112,6 +112,7 @@ const CustomerDashboard = () => {
 
   // Per-section loading
   const [loadingVehicles, setLoadingVehicles] = useState(true);
+  // Keep loading true until auth resolves so we never flash "No Reservations"
   const [loadingReservations, setLoadingReservations] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
@@ -173,8 +174,15 @@ const CustomerDashboard = () => {
   /* ── Initial data load ─────────────────────────────── */
   useEffect(() => {
     loadVehiclesAndContact();
-    loadReservations();
   }, []);
+
+  /* ── Load reservations once auth resolves ──────────── */
+  useEffect(() => {
+    // authLoading: still checking token — don't do anything yet
+    if (authLoading) return;
+    // auth done: load (will be empty if no user)
+    loadReservations();
+  }, [authLoading, user]);
 
   /* ── Load profile when profile tab is opened ──────── */
   useEffect(() => {

@@ -2,9 +2,20 @@ import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  pool: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  }
+});
+
+// Verify SMTP connection on startup (non-blocking)
+transporter.verify((error) => {
+  if (error) {
+    console.error('❌ SMTP connection failed:', error.message);
+    console.error('   Check EMAIL_USER and EMAIL_PASS environment variables on Railway.');
+  } else {
+    console.log('✅ SMTP server is ready to send emails');
   }
 });
 
