@@ -1161,6 +1161,8 @@ const CustomerDashboard = () => {
           onSuccess={() => {
             setShowBookingModal(false);
             loadReservations();
+            loadVehiclesAndContact();
+            changeTab("reservations");
           }}
         />
       )}

@@ -182,16 +182,16 @@ export const createReservation = async (req, res) => {
       data: { status: "RESERVED" },
     });
 
-    // Send booking confirmation email
+    // Send booking confirmation email (non-blocking)
     const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
-    await sendBookingConfirmation(
+    sendBookingConfirmation(
       user.email,
       `${user.firstName} ${user.lastName}`,
       vehicleName,
       reservation.startDate,
       reservation.endDate,
       reservation.contractNumber,
-    );
+    ).catch(e => console.error("Email error:", e));
 
     console.log("✅ Reservation created successfully:", reservation.id);
     res.status(201).json(reservation);
@@ -287,16 +287,16 @@ export const updateReservationStatus = async (req, res) => {
         });
         updatedReservation.contractPdfUrl = contractPdfUrl;
 
-        // Send reservation confirmed email
+        // Send reservation confirmed email (non-blocking)
         const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
-        await sendReservationConfirmed(
+        sendReservationConfirmed(
           updatedReservation.user.email,
           `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
           vehicleName,
           updatedReservation.startDate,
           updatedReservation.endDate,
           updatedReservation.contractNumber,
-        );
+        ).catch(e => console.error("Email error:", e));
       } catch (pdfError) {
         console.error("PDF generation failed:", pdfError.message);
       }
@@ -304,17 +304,18 @@ export const updateReservationStatus = async (req, res) => {
 
     // Send car returned email on COMPLETED
     if (status === "COMPLETED") {
+      // Send car returned email (non-blocking)
       const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
       const checkin = await prisma.checkin.findUnique({
         where: { reservationId: parseInt(id) },
       });
-      await sendCarReturned(
+      sendCarReturned(
         updatedReservation.user.email,
         `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
         vehicleName,
         updatedReservation.contractNumber,
         checkin?.extraCharges || 0,
-      );
+      ).catch(e => console.error("Email error:", e));
     }
 
     // Send cancellation email on CANCELLED
@@ -322,26 +323,24 @@ export const updateReservationStatus = async (req, res) => {
       const vehicleName = `${updatedReservation.vehicle.brand} ${updatedReservation.vehicle.model}`;
       const wasConfirmed = reservation.status === "CONFIRMED";
 
-      // Send email to customer
-      await sendReservationCancelled(
+      // Send email to customer (non-blocking)
+      sendReservationCancelled(
         updatedReservation.user.email,
         `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
         vehicleName,
         updatedReservation.startDate,
         updatedReservation.endDate,
         updatedReservation.contractNumber,
-      );
+      ).catch(e => console.error("Email error:", e));
 
-      // If reservation was confirmed and cancelled by customer, notify admin
+      // If reservation was confirmed and cancelled by customer, notify admin (non-blocking)
       if (wasConfirmed && userRole === "CUSTOMER") {
-        try {
-          const admin = await prisma.user.findFirst({
-            where: { role: "ADMIN" },
-            select: { email: true, firstName: true },
-          });
-
+        prisma.user.findFirst({
+          where: { role: "ADMIN" },
+          select: { email: true, firstName: true },
+        }).then(admin => {
           if (admin) {
-            await sendAdminCancellationNotification(
+            return sendAdminCancellationNotification(
               admin.email,
               admin.firstName,
               `${updatedReservation.user.firstName} ${updatedReservation.user.lastName}`,
@@ -352,9 +351,9 @@ export const updateReservationStatus = async (req, res) => {
               updatedReservation.id,
             );
           }
-        } catch (emailError) {
+        }).catch(emailError => {
           console.error("Failed to send admin notification:", emailError);
-        }
+        });
       }
     }
 
@@ -382,9 +381,7 @@ const sendAdminCancellationNotification = async (
 ) => {
   const nodemailer = await import("nodemailer");
   const transporter = nodemailer.default.createTransport({
-    host: process.env.EMAIL_HOST || "smtp.gmail.com",
-    port: process.env.EMAIL_PORT || 587,
-    secure: false,
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
@@ -431,16 +428,16 @@ export const updatePaymentStatus = async (req, res) => {
       userId,
     );
 
-    // Send payment received email
+    // Send payment received email (non-blocking)
     if (paymentStatus === "PAID" || paymentStatus === "PARTIAL") {
       const vehicleName = `${reservation.vehicle.brand} ${reservation.vehicle.model}`;
-      await sendPaymentReceived(
+      sendPaymentReceived(
         reservation.user.email,
         `${reservation.user.firstName} ${reservation.user.lastName}`,
         vehicleName,
         reservation.contractNumber,
         paymentStatus,
-      );
+      ).catch(e => console.error("Email error:", e));
     }
 
     console.log("✅ Payment status updated successfully");
