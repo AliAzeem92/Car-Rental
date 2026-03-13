@@ -13,6 +13,7 @@ import maintenanceRoutes from './routes/maintenanceRoutes.js';
 import checkInOutRoutes from './routes/checkInOutRoutes.js';
 import invoiceRoutes from './routes/invoiceRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
+import migrationRoutes from './routes/migrationRoutes.js';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/planning', planningRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/checkinout', checkInOutRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/migrations', migrationRoutes);
 
 // Health check
 app.get('/', (req, res) => {
